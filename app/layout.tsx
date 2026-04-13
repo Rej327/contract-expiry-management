@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
-import { ColorSchemeScript, MantineProvider, createTheme } from '@mantine/core';
-import { Notifications } from '@mantine/notifications';
+import { ColorSchemeScript, MantineProvider, createTheme } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 
 // Mantine CSS imports
-import '@mantine/core/styles.css';
-import '@mantine/notifications/styles.css';
-import 'mantine-datatable/styles.css';
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+import "mantine-datatable/styles.css";
 import "./globals.css";
 
 const theme = createTheme({
   /** Custom theme options if needed */
-  primaryColor: 'blue',
+  primaryColor: "blue",
 });
 
 const geistSans = Geist({
@@ -36,7 +36,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      suppressHydrationWarning
+    >
       <head>
         <ColorSchemeScript />
       </head>
