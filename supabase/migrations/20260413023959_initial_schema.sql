@@ -123,7 +123,7 @@ CREATE TABLE contract_reminder (
 CREATE TABLE notification_template (
   template_id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   template_name           TEXT NOT NULL,
-  template_subject        TEXT NOT NULL,
+  template_subject        TEXT,
   template_body           TEXT NOT NULL,           -- Supports {{employee_name}}, {{expiry_date}} tokens
   template_channel        NOTIFICATION_CHANNEL NOT NULL DEFAULT 'EMAIL',
   template_trigger_days   INTEGER NOT NULL,        -- Send N days before expiry
