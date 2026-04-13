@@ -18,21 +18,31 @@ export const supabaseAdmin = serviceRoleKey
   : null;
 
 // -------------------------------------------------------
-// Connection check — server-side only, dev-friendly log
+// Connection check — call this in a Server Component
 // Stripped automatically in production via removeConsole
 // -------------------------------------------------------
-if (typeof window === "undefined") {
-  (async () => {
-    try {
-      const { error } = await supabase
-        .from("contract")
-        .select("contract_id")
-        .limit(1);
-      if (error) throw error;
-      console.log("Supabase connected successfully:", supabaseUrl);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error("Supabase connection failed:", message);
+export async function checkSupabaseConnection(): Promise<void> {
+  // Only execute on server
+  if (typeof window !== "undefined") return;
+
+  try {
+    const { error } = await supabase
+      .from("contract")
+      .select("contract_id")
+      .limit(1);
+
+    if (error) {
+      console.error(
+        "Supabase connection error details:",
+        JSON.stringify(error, null, 2),
+      );
+      throw new Error(error.message || "Unknown Supabase error");
     }
-  })();
+    console.log("Supabase connected successfully:", supabaseUrl);
+  } catch (err: any) {
+    console.error(
+      "Supabase connection failed:",
+      err?.message || err || "Unknown error",
+    );
+  }
 }

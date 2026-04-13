@@ -10,6 +10,8 @@ import "@mantine/notifications/styles.css";
 import "mantine-datatable/styles.css";
 import "./globals.css";
 
+import { checkSupabaseConnection } from "@/lib/supabase";
+
 const theme = createTheme({
   /** Custom theme options if needed */
   primaryColor: "blue",
@@ -30,18 +32,21 @@ export const metadata: Metadata = {
   description: "Centralized tracking and renewal for employee contracts.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Check connection on server-side
+  await checkSupabaseConnection();
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning
     >
-      <head>
+      <head suppressHydrationWarning>
         <ColorSchemeScript />
       </head>
       <body>
