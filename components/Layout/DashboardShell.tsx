@@ -22,23 +22,18 @@ import { usePathname } from 'next/navigation';
 
 const sidebarData = [
   {
-    label: 'CONTRACTS',
+    label: 'MAIN MENU',
     links: [
-      { label: 'Contract Expiry', icon: IconFileCertificate, link: '/' },
-      { label: 'Renewal Logs', icon: IconHistory, link: '/renewals' },
+      { label: 'Dashboard', icon: IconLayoutDashboard, link: '/dashboard' },
+      { label: 'Contracts', icon: IconFileCertificate, link: '/' },
+      { label: 'Employees', icon: IconUsers, link: '/employees' },
     ]
   },
   {
-    label: 'LIST',
+    label: 'ADMINISTRATION',
     links: [
-      { label: 'Request List', icon: IconListCheck, link: '/requests' },
-      { label: 'Notification List', icon: IconBell, link: '/notifications' },
-    ]
-  },
-  {
-    label: 'TEAM',
-    links: [
-      { label: 'Manage Team', icon: IconUsers, link: '/team' },
+      { label: 'Reports', icon: IconListCheck, link: '/reports' },
+      { label: 'Settings', icon: IconSettings, link: '/settings' },
     ]
   }
 ];

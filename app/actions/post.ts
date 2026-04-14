@@ -33,13 +33,26 @@ export async function sendEmail({
   }
 }
 
+import { validateContract } from "@/lib/validation";
+
 export async function createContract(contractData: any) {
-  const { data, error } = await supabase.rpc('create_contract', { 
-    input_data: contractData 
+  // Manual server-side validation
+  const validation = validateContract(contractData);
+  
+  if (!validation.isValid) {
+    return { 
+      success: false, 
+      message: Object.values(validation.errors)[0],
+      errors: validation.errors 
+    };
+  }
+
+  const { data, error } = await supabase.rpc("create_contract", {
+    input_data: contractData,
   });
   if (error) {
-    console.error('Error creating contract:', error);
-    return { success: false, error };
+    console.error("Error creating contract:", error);
+    return { success: false, message: error.message };
   }
   return data;
 }

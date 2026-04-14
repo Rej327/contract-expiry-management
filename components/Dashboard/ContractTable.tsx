@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Title, Text, Group, Button, TextInput, Box, Paper, Avatar, Badge, ActionIcon, Stack } from '@mantine/core';
-import { DataTable } from 'mantine-datatable';
-import { IconSearch, IconMail, IconRepeat, IconDownload, IconChevronRight } from '@tabler/icons-react';
+import { DataTable, DataTableSortStatus } from 'mantine-datatable';
+import { IconSearch, IconMail, IconRepeat, IconDownload, IconChevronRight, IconEdit, IconTrash } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 
 const PAGE_SIZE = 10;
@@ -19,6 +20,14 @@ interface ContractRecord {
   employee_avatar_url: string;
   manager_first_name: string;
   manager_last_name: string;
+  contract_type: string;
+  contract_salary: number;
+  contract_notice_period: string;
+  contract_probation: string;
+  contract_issued_date: string;
+  contract_start_date: string;
+  contract_signed_date: string | null;
+  contract_auto_renewal: boolean;
 }
 
 interface ContractTableProps {
@@ -27,9 +36,26 @@ interface ContractTableProps {
   page: number;
   onPageChange: (page: number) => void;
   onSearch: (value: string) => void;
+  onEdit: (record: ContractRecord) => void;
+  onDelete: (record: ContractRecord) => void;
+  onRenew: (record: ContractRecord) => void;
+  sortStatus: DataTableSortStatus<ContractRecord>;
+  onSortStatusChange: (status: DataTableSortStatus<ContractRecord>) => void;
 }
 
-export function ContractTable({ data, totalCount, page, onPageChange, onSearch }: ContractTableProps) {
+export function ContractTable({ 
+  data, 
+  totalCount, 
+  page, 
+  onPageChange, 
+  onSearch, 
+  onEdit, 
+  onDelete, 
+  onRenew,
+  sortStatus,
+  onSortStatusChange
+}: ContractTableProps) {
+  const router = useRouter();
   const [selectedRecords, setSelectedRecords] = useState<ContractRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -116,13 +142,20 @@ export function ContractTable({ data, totalCount, page, onPageChange, onSearch }
           {
             accessor: 'employee',
             title: 'EMPLOYEE',
+            sortable: true,
             render: (record) => (
-              <Group gap="sm">
+              <Group 
+                gap="sm" 
+                style={{ cursor: 'pointer' }} 
+                onClick={() => router.push(`/contracts/${record.contract_id}`)}
+              >
                 <Avatar src={record.employee_avatar_url} radius="xl" color="blue">
                   {record.employee_first_name[0]}{record.employee_last_name[0]}
                 </Avatar>
                 <div>
-                  <Text size="sm" fw={700}>{record.employee_first_name} {record.employee_last_name}</Text>
+                  <Text size="sm" fw={700} style={{ '&:hover': { textDecoration: 'underline' } }}>
+                    {record.employee_first_name} {record.employee_last_name}
+                  </Text>
                   <Text size="xs" c="gray.7">{record.employee_role}</Text>
                 </div>
               </Group>
@@ -131,6 +164,7 @@ export function ContractTable({ data, totalCount, page, onPageChange, onSearch }
           {
             accessor: 'manager',
             title: 'MANAGER',
+            sortable: true,
             render: (record) => (
               <Text size="sm" fw={500}>{record.manager_first_name} {record.manager_last_name}</Text>
             ),
@@ -138,6 +172,7 @@ export function ContractTable({ data, totalCount, page, onPageChange, onSearch }
           {
             accessor: 'contract_expiry_date',
             title: 'EXPIRY DATE',
+            sortable: true,
             render: (record) => (
               <div>
                 <Text size="sm" fw={700}>{dayjs(record.contract_expiry_date).format('MMM DD, YYYY')}</Text>
@@ -150,6 +185,7 @@ export function ContractTable({ data, totalCount, page, onPageChange, onSearch }
           {
             accessor: 'contract_status',
             title: 'STATUS',
+            sortable: true,
             render: (record) => getStatusBadge(record.contract_status),
           },
           {
@@ -158,8 +194,26 @@ export function ContractTable({ data, totalCount, page, onPageChange, onSearch }
             textAlign: 'right',
             render: (record) => (
               <Group gap={8} justify="flex-end">
-                <ActionIcon variant="subtle" color="gray" radius="xl">
+                <ActionIcon variant="subtle" color="gray" radius="xl" title="Notify">
                   <IconMail size={18} />
+                </ActionIcon>
+                <ActionIcon 
+                  variant="subtle" 
+                  color="blue" 
+                  radius="xl" 
+                  title="Edit"
+                  onClick={() => onEdit(record)}
+                >
+                  <IconEdit size={18} />
+                </ActionIcon>
+                <ActionIcon 
+                  variant="subtle" 
+                  color="red" 
+                  radius="xl" 
+                  title="Delete"
+                  onClick={() => onDelete(record)}
+                >
+                  <IconTrash size={18} />
                 </ActionIcon>
                 <Button 
                   size="xs" 
@@ -167,6 +221,7 @@ export function ContractTable({ data, totalCount, page, onPageChange, onSearch }
                   color="blue" 
                   radius="md" 
                   leftSection={<IconRepeat size={14} />}
+                  onClick={() => onRenew(record)}
                 >
                   Renew
                 </Button>
@@ -180,6 +235,8 @@ export function ContractTable({ data, totalCount, page, onPageChange, onSearch }
         recordsPerPage={PAGE_SIZE}
         page={page}
         onPageChange={onPageChange}
+        sortStatus={sortStatus}
+        onSortStatusChange={onSortStatusChange}
         minHeight={150}
         styles={{
           header: {
