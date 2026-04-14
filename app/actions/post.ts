@@ -32,3 +32,14 @@ export async function sendEmail({
     return { success: false, error };
   }
 }
+
+export async function createContract(contractData: any) {
+  const { data, error } = await supabase.rpc('create_contract', { 
+    input_data: contractData 
+  });
+  if (error) {
+    console.error('Error creating contract:', error);
+    return { success: false, error };
+  }
+  return data;
+}
