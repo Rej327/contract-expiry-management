@@ -24,6 +24,7 @@ import {
   Loader,
   Center,
   Modal,
+  Textarea,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import {
@@ -40,7 +41,7 @@ import {
 import { DashboardShell } from "@/components/Layout/DashboardShell";
 import { getContractDetail, ContractDetailResponse } from "@/app/actions/get";
 import { toggleAutoRenewal, renewContract, terminateContract } from "@/app/actions/update";
-import { addContractReminder } from "@/app/actions/post";
+import { addContractReminder, sendContractNotification } from "@/app/actions/post";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
@@ -68,11 +69,27 @@ export default function ContractDetailPage({
   const [reminderDate, setReminderDate] = useState<Date | null>(new Date());
   const [terminationNotes, setTerminationNotes] = useState('');
   const [newExpiryDate, setNewExpiryDate] = useState<Date | null>(null);
+  
+  const [templateOpened, { open: openTemplate, close: closeTemplate }] = useDisclosure(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
 
   const fetchDetail = async () => {
     setLoading(true);
     const res = await getContractDetail(id);
     setData(res);
+    
+    if (res?.contract) {
+        const { employee, contract_expiry_date } = res.contract;
+        setEmailSubject(`Your Contract Renewal for ${employee.employee_role}`);
+        setEmailBody(`Hi ${employee.employee_first_name},
+
+We're writing to let you know that your current contract is approaching its expiration date on ${dayjs(contract_expiry_date).format("MMMM DD, YYYY")}.
+
+We've been incredibly happy with your performance as a ${employee.employee_role} and would love to extend your stay with us. Based on our auto-renewal policy, your contract will automatically extend for another 12-month period unless we hear from you otherwise.
+
+Please let your manager know if you have any questions or would like to discuss terms before the renewal date.`);
+    }
     setLoading(false);
   };
 
@@ -177,6 +194,23 @@ export default function ContractDetailPage({
 
   const handleExportPDF = () => {
     window.print();
+  };
+
+  const handleSendNotification = async () => {
+    setActionLoading(true);
+    const res = await sendContractNotification({
+      contractId: contract.contract_id,
+      to: employee.employee_email,
+      subject: emailSubject,
+      html: emailBody.replace(/\n/g, '<br>'),
+    });
+
+    if (res.success) {
+      notifications.show({ title: "Email Sent", message: "Notification has been dispatched", color: "green" });
+    } else {
+      notifications.show({ title: "Failed", message: res.message || "Could not send email", color: "red" });
+    }
+    setActionLoading(false);
   };
 
   const breadcrumbs = [
@@ -423,9 +457,20 @@ export default function ContractDetailPage({
                   <Text fw={700} size="sm">
                     Employee Notification Preview
                   </Text>
-                  <Anchor size="xs" fw={700} color="blue">
-                    Edit Template
-                  </Anchor>
+                  <Group gap="sm">
+                    <Button 
+                        variant="light" 
+                        size="xs" 
+                        color="blue" 
+                        onClick={handleSendNotification}
+                        loading={actionLoading}
+                    >
+                        Send Now
+                    </Button>
+                    <Anchor size="xs" fw={700} color="blue" onClick={openTemplate}>
+                        Edit Template
+                    </Anchor>
+                  </Group>
                 </Group>
                 <Paper p="md" radius="sm" bg="gray.0" withBorder>
                   <Stack gap="xs">
@@ -442,7 +487,7 @@ export default function ContractDetailPage({
                         Subject:
                       </Text>
                       <Text size="xs" fw={600}>
-                        Your Contract Renewal for {employee.employee_role}
+                        {emailSubject}
                       </Text>
                     </Group>
                     <Divider my={4} />
@@ -451,27 +496,8 @@ export default function ContractDetailPage({
                       bg="white"
                       style={{ borderRadius: 4, minHeight: 200 }}
                     >
-                      <Text size="sm" c="gray.8" style={{ lineHeight: 1.6 }}>
-                        Hi {employee.employee_first_name},<br />
-                        <br />
-                        We're writing to let you know that your current contract
-                        is approaching its expiration date on{" "}
-                        <b>
-                          {dayjs(contract.contract_expiry_date).format(
-                            "MMMM DD, YYYY",
-                          )}
-                        </b>
-                        .<br />
-                        <br />
-                        We've been incredibly happy with your performance as a{" "}
-                        {employee.employee_role} and would love to extend your
-                        stay with us. Based on our auto-renewal policy, your
-                        contract will automatically extend for another 12-month
-                        period unless we hear from you otherwise.
-                        <br />
-                        <br />
-                        Please let your manager know if you have any questions
-                        or would like to discuss terms before the renewal date.
+                      <Text size="sm" c="gray.8" style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                        {emailBody}
                       </Text>
                     </Box>
                   </Stack>
@@ -672,6 +698,25 @@ export default function ContractDetailPage({
             <Group justify="flex-end">
                 <Button variant="outline" onClick={closeRenew} disabled={actionLoading}>Cancel</Button>
                 <Button onClick={handleManualRenew} loading={actionLoading} disabled={!newExpiryDate}>Confirm Renewal</Button>
+            </Group>
+        </Stack>
+      </Modal>
+
+      <Modal opened={templateOpened} onClose={closeTemplate} title="Edit Email Template" size="lg" radius="md">
+        <Stack>
+            <TextInput 
+                label="Email Subject" 
+                value={emailSubject} 
+                onChange={(e) => setEmailSubject(e.currentTarget.value)} 
+            />
+            <Textarea 
+                label="Email Body" 
+                rows={10} 
+                value={emailBody} 
+                onChange={(e) => setEmailBody(e.currentTarget.value)} 
+            />
+            <Group justify="flex-end">
+                <Button onClick={closeTemplate}>Save Preview</Button>
             </Group>
         </Stack>
       </Modal>

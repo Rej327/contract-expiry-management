@@ -4,32 +4,53 @@ import { supabase } from "@/lib/supabase";
 
 import { resend } from "@/lib/resend";
 
-export async function sendEmail({
+export async function sendContractNotification({
+  contractId,
   to,
   subject,
   html,
+  channel = "EMAIL",
 }: {
+  contractId: string;
   to: string;
   subject: string;
   html: string;
-}) {
+  channel?: string;
+}): Promise<{ success: boolean; message?: string }> {
   try {
-    const { data, error } = await resend.emails.send({
+    // 1. Send via Resend
+    const { error: resendError } = await resend.emails.send({
       from: "Formsly <onboarding@resend.dev>",
       to,
       subject,
       html,
     });
 
-    if (error) {
-      console.error("Resend error:", error);
-      return { success: false, error };
+    if (resendError) {
+      console.error("Resend error:", resendError);
+      return { success: false, message: "Failed to send email via Resend" };
     }
 
-    return { success: true, data };
-  } catch (error) {
-    console.error("Failed to send email:", error);
-    return { success: false, error };
+    // 2. Log in Supabase
+    const { error: rpcError } = await supabase.rpc("log_notification_sent", {
+      input_data: {
+        contract_id: contractId,
+        channel,
+        recipient_email: to,
+        subject,
+        body_snapshot: html,
+      },
+    });
+
+    if (rpcError) {
+      console.error("Supabase log error:", rpcError);
+      // We don't return failure here because the primary action (email) succeeded
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Notification unexpected error:", error);
+    return { success: false, message: error.message };
   }
 }
 
