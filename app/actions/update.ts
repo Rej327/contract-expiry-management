@@ -17,14 +17,20 @@ export async function updateContract(contractData: ContractFormValues): Promise<
   }
 
   const { data, error } = await supabase.rpc('update_contract', { 
-    input_data: contractData 
+    input_data: {
+      ...contractData,
+      contract_issued_date: contractData.contract_issued_date?.toISOString(),
+      contract_start_date: contractData.contract_start_date?.toISOString(),
+      contract_expiry_date: contractData.contract_expiry_date?.toISOString(),
+      contract_signed_date: contractData.contract_signed_date?.toISOString(),
+    } as any
   });
 
   if (error) {
     console.error('Error updating contract:', error);
     return { success: false, message: error.message };
   }
-  return data;
+  return data as { success: boolean; message?: string; errors?: any };
 }
 
 export async function renewContract(renewalData: { 
@@ -53,7 +59,7 @@ export async function renewContract(renewalData: {
     console.error('Error renewing contract:', error);
     return { success: false, message: error.message };
   }
-  return data;
+  return data as { success: boolean; message?: string; errors?: any };
 }
 
 export async function toggleAutoRenewal(contractId: string, autoRenewal: boolean, performedBy?: string): Promise<{ success: boolean; message?: string }> {
@@ -65,5 +71,17 @@ export async function toggleAutoRenewal(contractId: string, autoRenewal: boolean
     console.error('Error toggling auto renewal:', error);
     return { success: false, message: error.message };
   }
-  return data;
+  return data as { success: boolean; message?: string };
+}
+
+export async function terminateContract(contractId: string, notes?: string, performedBy?: string): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase.rpc('terminate_contract', { 
+    input_data: { contract_id: contractId, termination_notes: notes, performed_by: performedBy } 
+  });
+
+  if (error) {
+    console.error('Error terminating contract:', error);
+    return { success: false, message: error.message };
+  }
+  return data as { success: boolean; message?: string };
 }

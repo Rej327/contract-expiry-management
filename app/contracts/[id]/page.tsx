@@ -23,6 +23,7 @@ import {
   Anchor,
   Loader,
   Center,
+  Modal,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import {
@@ -38,7 +39,9 @@ import {
 } from "@tabler/icons-react";
 import { DashboardShell } from "@/components/Layout/DashboardShell";
 import { getContractDetail, ContractDetailResponse } from "@/app/actions/get";
-import { toggleAutoRenewal, renewContract } from "@/app/actions/update";
+import { toggleAutoRenewal, renewContract, terminateContract } from "@/app/actions/update";
+import { addContractReminder } from "@/app/actions/post";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { ContractRecord } from "@/components/Dashboard/ContractTable";
@@ -55,6 +58,16 @@ export default function ContractDetailPage({
   const { id } = use(params);
   const [data, setData] = useState<ContractDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  
+  const [terminateOpened, { open: openTerminate, close: closeTerminate }] = useDisclosure(false);
+  const [reminderOpened, { open: openReminder, close: closeReminder }] = useDisclosure(false);
+  const [renewOpened, { open: openRenew, close: closeRenew }] = useDisclosure(false);
+
+  const [reminderTitle, setReminderTitle] = useState('');
+  const [reminderDate, setReminderDate] = useState<Date | null>(new Date());
+  const [terminationNotes, setTerminationNotes] = useState('');
+  const [newExpiryDate, setNewExpiryDate] = useState<Date | null>(null);
 
   const fetchDetail = async () => {
     setLoading(true);
@@ -90,6 +103,9 @@ export default function ContractDetailPage({
   const { contract, reminders, renewals } = data;
   const { employee, manager } = contract;
 
+  const totalDays = (contract.total_tenure_days || 0) + (contract.remaining_days || 0);
+  const tenurePercentage = totalDays > 0 ? Math.round(((contract.total_tenure_days || 0) / totalDays) * 100) : 0;
+
   const handleToggleAutoRenewal = async (val: boolean) => {
     const res = await toggleAutoRenewal(contract.contract_id, val);
     if (res.success) {
@@ -100,6 +116,67 @@ export default function ContractDetailPage({
       });
       fetchDetail();
     }
+  };
+
+  const handleTerminate = async () => {
+    setActionLoading(true);
+    const res = await terminateContract(contract.contract_id, terminationNotes);
+    if (res.success) {
+      notifications.show({ title: "Terminated", message: "Contract has been terminated", color: "green" });
+      closeTerminate();
+      fetchDetail();
+    } else {
+      notifications.show({ title: "Error", message: res.message || "Failed to terminate", color: "red" });
+    }
+    setActionLoading(false);
+  };
+
+  const handleAddReminder = async () => {
+    if (!reminderTitle || !reminderDate) return;
+    setActionLoading(true);
+    const res = await addContractReminder({
+      contract_id: contract.contract_id,
+      title: reminderTitle,
+      due_date: dayjs(reminderDate).format('YYYY-MM-DD'),
+    });
+    if (res.success) {
+      notifications.show({ title: "Success", message: "Reminder added", color: "green" });
+      setReminderTitle('');
+      closeReminder();
+      fetchDetail();
+    } else {
+      notifications.show({ title: "Error", message: res.message || "Failed to add reminder", color: "red" });
+    }
+    setActionLoading(false);
+  };
+
+  const handleManualRenew = async () => {
+    if (!newExpiryDate) return;
+    setActionLoading(true);
+    const res = await renewContract({
+      contract_id: contract.contract_id,
+      new_expiry_date: dayjs(newExpiryDate).format("YYYY-MM-DD"),
+    });
+    if (res.success) {
+      notifications.show({
+        title: "Success",
+        message: "Contract renewed",
+        color: "green",
+      });
+      closeRenew();
+      fetchDetail();
+    } else {
+      notifications.show({
+        title: "Error",
+        message: res.message || "Failed to renew",
+        color: "red",
+      });
+    }
+    setActionLoading(false);
+  };
+
+  const handleExportPDF = () => {
+    window.print();
   };
 
   const breadcrumbs = [
@@ -177,10 +254,15 @@ export default function ContractDetailPage({
                 variant="default"
                 radius="md"
                 leftSection={<IconFileExport size={16} />}
+                onClick={handleExportPDF}
+                className="hide-on-print"
               >
                 Export PDF
               </Button>
-              <Button radius="md" color="blue">
+              <Button radius="md" color="blue" onClick={() => {
+                setNewExpiryDate(new Date(new Date(contract.contract_expiry_date).setFullYear(new Date(contract.contract_expiry_date).getFullYear() + 1)));
+                openRenew();
+              }}>
                 Renew Manually
               </Button>
             </Group>
@@ -445,6 +527,10 @@ export default function ContractDetailPage({
                     }
                     size="sm"
                     fw={700}
+                    onClick={() => {
+                        setNewExpiryDate(new Date(new Date(contract.contract_expiry_date).setFullYear(new Date(contract.contract_expiry_date).getFullYear() + 1)));
+                        openRenew();
+                    }}
                   >
                     Modify Renewal Terms
                   </Button>
@@ -457,6 +543,7 @@ export default function ContractDetailPage({
                     size="sm"
                     fw={700}
                     style={{ borderStyle: "solid" }}
+                    onClick={openTerminate}
                   >
                     Terminate Contract
                   </Button>
@@ -497,6 +584,7 @@ export default function ContractDetailPage({
                     leftSection={<IconPlus size={16} />}
                     size="xs"
                     fw={700}
+                    onClick={openReminder}
                   >
                     Add Reminder
                   </Button>
@@ -518,10 +606,10 @@ export default function ContractDetailPage({
                     {contract.total_tenure_days} Days
                   </Text>
                   <Box mt="md">
-                    <Progress value={92} color="white" size="sm" radius="xl" />
+                    <Progress value={tenurePercentage} color="white" size="sm" radius="xl" />
                     <Group justify="space-between" mt={4}>
                       <Text size="xs" fw={700} c="blue.1">
-                        92% through current term.
+                        {tenurePercentage}% through current term.
                       </Text>
                     </Group>
                   </Box>
@@ -531,6 +619,91 @@ export default function ContractDetailPage({
           </Grid.Col>
         </Grid>
       </Stack>
+
+      <Modal opened={terminateOpened} onClose={closeTerminate} title="Terminate Contract" radius="md">
+        <Stack>
+            <Text size="sm">Are you sure you want to terminate <b>{employee.employee_first_name}'s</b> contract? This will take effect immediately.</Text>
+            <TextInput 
+                label="Termination Notes" 
+                placeholder="Reason for termination..."
+                value={terminationNotes}
+                onChange={(e) => setTerminationNotes(e.currentTarget.value)}
+            />
+            <Group justify="flex-end">
+                <Button variant="outline" onClick={closeTerminate} disabled={actionLoading}>Cancel</Button>
+                <Button color="red" onClick={handleTerminate} loading={actionLoading}>Confirm Termination</Button>
+            </Group>
+        </Stack>
+      </Modal>
+
+      <Modal opened={reminderOpened} onClose={closeReminder} title="Add Contract Reminder" radius="md">
+        <Stack>
+            <TextInput 
+                label="Reminder Title" 
+                placeholder="e.g. Schedule review meeting"
+                value={reminderTitle}
+                onChange={(e) => setReminderTitle(e.currentTarget.value)}
+                withAsterisk
+            />
+            <DateInput 
+                label="Due Date"
+                value={reminderDate}
+                onChange={(val: any) => setReminderDate(val ? new Date(val) : null)}
+                withAsterisk
+                minDate={new Date()}
+            />
+            <Group justify="flex-end">
+                <Button variant="outline" onClick={closeReminder} disabled={actionLoading}>Cancel</Button>
+                <Button onClick={handleAddReminder} loading={actionLoading} disabled={!reminderTitle || !reminderDate}>Add Reminder</Button>
+            </Group>
+        </Stack>
+      </Modal>
+
+      <Modal opened={renewOpened} onClose={closeRenew} title="Renew Contract" radius="md">
+        <Stack>
+            <Text size="sm">Select new expiry date for 12-month extension or custom period.</Text>
+            <DateInput 
+                label="New Expiry Date"
+                value={newExpiryDate}
+                onChange={(val: any) => setNewExpiryDate(val ? new Date(val) : null)}
+                withAsterisk
+                minDate={new Date(contract.contract_expiry_date)}
+            />
+            <Group justify="flex-end">
+                <Button variant="outline" onClick={closeRenew} disabled={actionLoading}>Cancel</Button>
+                <Button onClick={handleManualRenew} loading={actionLoading} disabled={!newExpiryDate}>Confirm Renewal</Button>
+            </Group>
+        </Stack>
+      </Modal>
+
+      <style jsx global>{`
+        @media print {
+          .hide-on-print, 
+          header, 
+          nav, 
+          aside, 
+          button:not(.show-on-print),
+          .mantine-Breadcrumbs-root {
+            display: none !important;
+          }
+          
+          main, .mantine-AppShell-main {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+          }
+
+          .mantine-Paper-root {
+            border: 1px solid #eee !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+          }
+
+          body {
+            background: white !important;
+          }
+        }
+      `}</style>
     </DashboardShell>
   );
 }
