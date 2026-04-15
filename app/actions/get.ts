@@ -88,3 +88,15 @@ export async function getContractDetail(contractId: string): Promise<ContractDet
   }
   return data as unknown as ContractDetailResponse;
 }
+
+export async function getAllContractsForExport(): Promise<ContractRecord[]> {
+  const { data, error } = await supabase.rpc('get_contract_list', { 
+    input_data: { page: 1, limit: 10000 } // High limit to fetch all records
+  });
+  if (error) {
+    console.error('Error fetching all contracts for export:', error);
+    return [];
+  }
+  const result = data as unknown as { data: ContractRecord[]; total_count: number };
+  return result.data;
+}
