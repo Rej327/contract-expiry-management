@@ -2,7 +2,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { ContractRecord } from '@/components/Dashboard/ContractTable';
-import { ActivityLog, Employee, Manager, ContractReminder, ContractRenewal, ActivityRecord } from '@/types/types';
+import { ActivityLog, Employee, Manager, ContractReminder, ContractRenewal, ActivityRecord, NotificationLog } from '@/types/types';
 
 export interface DashboardStats {
   critical_count: number;
@@ -20,6 +20,7 @@ export interface ContractDetailResponse {
   contract: ContractDetail;
   reminders: ContractReminder[];
   renewals: ContractRenewal[];
+  notifications: NotificationLog[];
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {

@@ -38,6 +38,7 @@ import {
   IconPlus,
   IconFileExport,
   IconChevronRight,
+  IconRefresh,
 } from "@tabler/icons-react";
 import { DashboardShell } from "@/components/Layout/DashboardShell";
 import { getContractDetail, ContractDetailResponse } from "@/app/actions/get";
@@ -168,7 +169,12 @@ Management Team`,
       </DashboardShell>
     );
 
-  const { contract, reminders, renewals } = data;
+  const {
+    contract,
+    reminders = [],
+    renewals = [],
+    notifications: sentNotifications = [],
+  } = data;
   const { employee, manager } = contract;
 
   const totalDays =
@@ -195,16 +201,18 @@ Management Team`,
     const res = await terminateContract(contract.contract_id, terminationNotes);
     if (res.success) {
       notifications.show({
-        title: "Terminated",
-        message: "Contract has been terminated",
+        title: "Action Successful",
+        message: "The employee's contract has been successfully terminated.",
         color: "green",
       });
       closeTerminate();
       fetchDetail();
     } else {
       notifications.show({
-        title: "Error",
-        message: res.message || "Failed to terminate",
+        title: "Update Failed",
+        message:
+          res.message ||
+          "We encountered an issue while terminating the contract.",
         color: "red",
       });
     }
@@ -221,8 +229,8 @@ Management Team`,
     });
     if (res.success) {
       notifications.show({
-        title: "Success",
-        message: "Reminder added",
+        title: "Reminder Set",
+        message: "Your follow-up task has been successfully scheduled.",
         color: "green",
       });
       setReminderTitle("");
@@ -230,8 +238,9 @@ Management Team`,
       fetchDetail();
     } else {
       notifications.show({
-        title: "Error",
-        message: res.message || "Failed to add reminder",
+        title: "Task Error",
+        message:
+          res.message || "We couldn't schedule the reminder at this time.",
         color: "red",
       });
     }
@@ -278,14 +287,17 @@ Management Team`,
 
     if (res.success) {
       notifications.show({
-        title: "Email Sent",
-        message: "Notification has been dispatched",
+        title: "Message Delivered",
+        message: `The renewal notification has been sent to ${employee.employee_first_name}.`,
         color: "green",
       });
+      fetchDetail(); // Refresh the interaction history from the DB
     } else {
       notifications.show({
-        title: "Failed",
-        message: res.message || "Could not send email",
+        title: "Dispatch Failed",
+        message:
+          res.message ||
+          "The email could not be sent. Please check your connection.",
         color: "red",
       });
     }
@@ -610,6 +622,78 @@ Management Team`,
                         {emailBody}
                       </Text>
                     </Box>
+                  </Stack>
+                </Paper>
+
+                {/* Interaction History */}
+                <Paper p="xl" mt="xl" radius="md" withBorder shadow="xs">
+                  <Group justify="space-between" mb="xl">
+                    <Text fw={700} size="sm">
+                      Interaction History
+                    </Text>
+                  </Group>
+                  <Stack gap="lg">
+                    {[
+                      ...sentNotifications.map((n) => ({
+                        id: n.log_id,
+                        type: "NOTIFICATION",
+                        title: n.log_subject || "Contract Notification",
+                        date: n.log_sent_at,
+                        icon: <IconMail size={16} />,
+                        color: "blue",
+                      })),
+                      ...renewals.map((r) => ({
+                        id: r.renewal_id,
+                        type: "RENEWAL",
+                        title: `Contract Renewed until ${dayjs(r.renewal_new_expiry).format("MMM DD, YYYY")}`,
+                        date: r.renewal_created_at,
+                        icon: <IconRefresh size={16} />,
+                        color: "green",
+                      })),
+                    ]
+                      .sort(
+                        (a, b) => dayjs(b.date).unix() - dayjs(a.date).unix(),
+                      )
+                      .map((item) => (
+                        <Group
+                          key={item.id}
+                          align="flex-start"
+                          gap="md"
+                          wrap="nowrap"
+                        >
+                          <ThemeIcon
+                            color={item.color}
+                            variant="light"
+                            radius="xl"
+                            size="md"
+                          >
+                            {item.icon}
+                          </ThemeIcon>
+                          <Box style={{ flex: 1 }}>
+                            <Group justify="space-between" mb={2}>
+                              <Text size="sm" fw={700}>
+                                {item.title}
+                              </Text>
+                              <Text size="xs" c="gray.6">
+                                {dayjs(item.date).format(
+                                  "MMM DD, YYYY • hh:mm A",
+                                )}
+                              </Text>
+                            </Group>
+                            <Text size="xs" c="gray.7">
+                              {item.type === "NOTIFICATION"
+                                ? `Email Notification sent to ${employee.employee_email}`
+                                : "Manual renewal performed by administrator"}
+                            </Text>
+                          </Box>
+                        </Group>
+                      ))}
+                    {sentNotifications.length === 0 &&
+                      renewals.length === 0 && (
+                        <Text size="sm" c="gray.5" ta="center" py="xl">
+                          No interactions recorded yet.
+                        </Text>
+                      )}
                   </Stack>
                 </Paper>
               </Paper>
