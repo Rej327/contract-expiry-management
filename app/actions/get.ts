@@ -1,14 +1,34 @@
 'use server';
 
 import { supabase } from '@/lib/supabase';
+import { ContractRecord } from '@/components/Dashboard/ContractTable';
+import { ActivityLog, Employee, Manager, ContractReminder, ContractRenewal, ActivityRecord } from '@/types/types';
 
-export async function getDashboardStats() {
+export interface DashboardStats {
+  critical_count: number;
+  warning_count: number;
+  total_contracts: number;
+}
+
+export interface ContractDetail extends ContractRecord {
+  employee: Employee;
+  manager: Manager;
+  total_tenure_days: number;
+}
+
+export interface ContractDetailResponse {
+  contract: ContractDetail;
+  reminders: ContractReminder[];
+  renewals: ContractRenewal[];
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
   const { data, error } = await supabase.rpc('get_contract_dashboard_stats', { input_data: {} });
   if (error) {
     console.error('Error fetching dashboard stats:', error);
     return { critical_count: 0, warning_count: 0, total_contracts: 0 };
   }
-  return data;
+  return data as unknown as DashboardStats;
 }
 
 export async function getContractList(
@@ -17,7 +37,7 @@ export async function getContractList(
   search: string = '', 
   sortBy: string = 'contract_expiry_date', 
   sortOrder: 'ASC' | 'DESC' = 'ASC'
-) {
+): Promise<{ data: ContractRecord[]; total_count: number }> {
   const { data, error } = await supabase.rpc('get_contract_list', { 
     input_data: { page, limit, search, sort_by: sortBy, sort_order: sortOrder } 
   });
@@ -25,10 +45,10 @@ export async function getContractList(
     console.error('Error fetching contract list:', error);
     return { data: [], total_count: 0 };
   }
-  return data;
+  return data as unknown as { data: ContractRecord[]; total_count: number };
 }
 
-export async function getRecentActivityLogs(limit: number = 5) {
+export async function getRecentActivityLogs(limit: number = 5): Promise<ActivityRecord[]> {
   const { data, error } = await supabase.rpc('get_recent_activity_logs', { 
     input_data: { limit } 
   });
@@ -36,28 +56,28 @@ export async function getRecentActivityLogs(limit: number = 5) {
     console.error('Error fetching recent activity logs:', error);
     return [];
   }
-  return data;
+  return data as unknown as ActivityRecord[];
 }
 
-export async function getEmployees() {
+export async function getEmployees(): Promise<Employee[]> {
   const { data, error } = await supabase.rpc('get_employees');
   if (error) {
     console.error('Error fetching employees:', error);
     return [];
   }
-  return data;
+  return data as unknown as Employee[];
 }
 
-export async function getManagers() {
+export async function getManagers(): Promise<Manager[]> {
   const { data, error } = await supabase.rpc('get_managers');
   if (error) {
     console.error('Error fetching managers:', error);
     return [];
   }
-  return data;
+  return data as unknown as Manager[];
 }
 
-export async function getContractDetail(contractId: string) {
+export async function getContractDetail(contractId: string): Promise<ContractDetailResponse | null> {
   const { data, error } = await supabase.rpc('get_contract_detail', { 
     input_data: { contract_id: contractId } 
   });
@@ -65,5 +85,5 @@ export async function getContractDetail(contractId: string) {
     console.error('Error fetching contract detail:', error);
     return null;
   }
-  return data;
+  return data as unknown as ContractDetailResponse;
 }

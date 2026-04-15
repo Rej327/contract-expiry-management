@@ -37,10 +37,12 @@ import {
   IconChevronRight,
 } from "@tabler/icons-react";
 import { DashboardShell } from "@/components/Layout/DashboardShell";
-import { getContractDetail } from "@/app/actions/get";
+import { getContractDetail, ContractDetailResponse } from "@/app/actions/get";
 import { toggleAutoRenewal, renewContract } from "@/app/actions/update";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
+import { ContractRecord } from "@/components/Dashboard/ContractTable";
+import { ContractReminder, ContractRenewal } from "@/types/types";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 dayjs.extend(relativeTime);
@@ -51,7 +53,7 @@ export default function ContractDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ContractDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchDetail = async () => {
@@ -467,7 +469,7 @@ export default function ContractDetailPage({
                   PENDING ACTIONS
                 </Text>
                 <Stack gap="md">
-                  {reminders.map((reminder: any) => (
+                  {reminders.map((reminder: ContractReminder) => (
                     <Group
                       key={reminder.reminder_id}
                       wrap="nowrap"

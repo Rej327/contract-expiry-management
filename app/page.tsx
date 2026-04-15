@@ -17,15 +17,17 @@ import { createContract } from '@/app/actions/post';
 import { updateContract, renewContract } from '@/app/actions/update';
 import { deleteContract } from '@/app/actions/delete';
 import { ContractForm } from '@/components/contracts/ContractForm';
+import { ContractRecord } from '@/components/Dashboard/ContractTable';
+import { ActivityRecord } from '@/types/types';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ critical_count: 0, warning_count: 0, total_contracts: 0 });
-  const [contracts, setContracts] = useState({ data: [], total_count: 0 });
-  const [actions, setActions] = useState([]);
+  const [contracts, setContracts] = useState<{ data: ContractRecord[], total_count: number }>({ data: [], total_count: 0 });
+  const [actions, setActions] = useState<ActivityRecord[]>([]);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<any>>({
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<ContractRecord>>({
     columnAccessor: 'contract_expiry_date',
     direction: 'asc',
   });
@@ -35,7 +37,7 @@ export default function DashboardPage() {
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const [renewOpened, { open: openRenew, close: closeRenew }] = useDisclosure(false);
 
-  const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [selectedContract, setSelectedContract] = useState<ContractRecord | null>(null);
 
   const fetchStats = async () => {
     const data = await getDashboardStats();
@@ -106,11 +108,12 @@ export default function DashboardPage() {
     setLoading(false);
   };
 
-  const handleRenew = async (values: any) => {
+  const handleRenew = async (values: { new_expiry_date: string }) => {
+    if (!selectedContract) return;
     setLoading(true);
     const result = await renewContract({
       contract_id: selectedContract.contract_id,
-      new_expiry_date: dayjs(values.new_expiry_date).format('YYYY-MM-DD'),
+      new_expiry_date: values.new_expiry_date,
     });
     if (result.success) {
       notifications.show({ title: 'Success', message: 'Contract renewed successfully', color: 'green' });
@@ -203,17 +206,20 @@ export default function DashboardPage() {
         <Modal opened={renewOpened} onClose={closeRenew} title="Renew Contract" radius="md">
            <Stack>
              <Text size="sm">Quick renew for <b>{selectedContract?.employee_first_name} {selectedContract?.employee_last_name}</b>.</Text>
-             {/* Simple renew form or just a date picker */}
-             <DateInput 
-               label="New Expiry Date" 
-               placeholder="Select date"
-               minDate={new Date()}
-               value={selectedContract?.new_expiry_date ? new Date(selectedContract.new_expiry_date) : new Date(new Date().setFullYear(new Date().getFullYear() + 1))}
-               onChange={(val) => setSelectedContract({ ...selectedContract, new_expiry_date: val })}
-             />
+              <DateInput 
+                label="New Expiry Date" 
+                placeholder="Select date"
+                minDate={new Date()}
+                value={selectedContract?.contract_expiry_date ? new Date(selectedContract.contract_expiry_date) : new Date(new Date().setFullYear(new Date().getFullYear() + 1))}
+                onChange={(val) => {
+                  if (selectedContract && val) {
+                    setSelectedContract({ ...selectedContract, contract_expiry_date: dayjs(val).format('YYYY-MM-DD') });
+                  }
+                }}
+              />
              <Group justify="flex-end">
                <Button variant="outline" onClick={closeRenew} disabled={loading}>Cancel</Button>
-               <Button onClick={() => handleRenew({ new_expiry_date: selectedContract.new_expiry_date })} loading={loading}>Renew</Button>
+                <Button onClick={() => handleRenew({ new_expiry_date: dayjs(selectedContract?.contract_expiry_date).format('YYYY-MM-DD') })} loading={loading}>Renew</Button>
              </Group>
            </Stack>
         </Modal>

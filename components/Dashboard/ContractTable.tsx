@@ -9,10 +9,11 @@ import dayjs from 'dayjs';
 
 const PAGE_SIZE = 10;
 
-interface ContractRecord {
-  contract_id: string;
-  contract_status: 'CRITICAL' | 'WARNING' | 'HEALTHY' | 'EXPIRED' | 'TERMINATED';
-  contract_expiry_date: string;
+import { Contract, ContractStatus, ContractType, Employee, Manager } from '@/types/types';
+
+export interface ContractRecord extends Omit<Contract, 'contract_status' | 'contract_type'> {
+  contract_status: ContractStatus;
+  contract_type: ContractType;
   remaining_days: number;
   employee_first_name: string;
   employee_last_name: string;
@@ -20,14 +21,6 @@ interface ContractRecord {
   employee_avatar_url: string;
   manager_first_name: string;
   manager_last_name: string;
-  contract_type: string;
-  contract_salary: number;
-  contract_notice_period: string;
-  contract_probation: string;
-  contract_issued_date: string;
-  contract_start_date: string;
-  contract_signed_date: string | null;
-  contract_auto_renewal: boolean;
 }
 
 interface ContractTableProps {

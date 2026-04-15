@@ -2,8 +2,9 @@
 
 import { supabase } from '@/lib/supabase';
 import { validateContract, validateRenewal } from '@/lib/validation';
+import { ContractFormValues } from '@/components/contracts/ContractForm';
 
-export async function updateContract(contractData: any) {
+export async function updateContract(contractData: ContractFormValues): Promise<{ success: boolean; message?: string; errors?: any }> {
   // Manual server-side validation
   const validation = validateContract(contractData);
   
@@ -28,11 +29,11 @@ export async function updateContract(contractData: any) {
 
 export async function renewContract(renewalData: { 
   contract_id: string; 
-  new_expiry_date: any; 
+  new_expiry_date: string; 
   terms_notes?: string; 
   initiated_by?: string; 
   is_auto?: boolean; 
-}) {
+}): Promise<{ success: boolean; message?: string; errors?: any }> {
   // Manual server-side validation
   const validation = validateRenewal(renewalData);
   
@@ -55,7 +56,7 @@ export async function renewContract(renewalData: {
   return data;
 }
 
-export async function toggleAutoRenewal(contractId: string, autoRenewal: boolean, performedBy?: string) {
+export async function toggleAutoRenewal(contractId: string, autoRenewal: boolean, performedBy?: string): Promise<{ success: boolean; message?: string }> {
   const { data, error } = await supabase.rpc('toggle_auto_renewal', { 
     input_data: { contract_id: contractId, auto_renewal: autoRenewal, performed_by: performedBy } 
   });

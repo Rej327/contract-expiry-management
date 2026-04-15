@@ -15,10 +15,19 @@ import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { getEmployees, getManagers } from '@/app/actions/get';
+import { ContractInsert, ContractUpdate, Employee, Manager, ContractStatus, ContractType } from '@/types/types';
+
+export interface ContractFormValues extends Omit<ContractInsert, 'contract_issued_date' | 'contract_start_date' | 'contract_expiry_date' | 'contract_signed_date' | 'contract_salary'> {
+  contract_issued_date: Date | null;
+  contract_start_date: Date | null;
+  contract_expiry_date: Date | null;
+  contract_signed_date: Date | null;
+  contract_salary: number;
+}
 
 interface ContractFormProps {
-  initialValues?: any;
-  onSubmit: (values: any) => Promise<any>;
+  initialValues?: any; // Keep any here for simplicity as it could be ContractRecord or partial
+  onSubmit: (values: ContractFormValues) => Promise<{ success: boolean; message?: string }>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -77,11 +86,11 @@ export function ContractForm({ initialValues, onSubmit, onCancel, isLoading: isS
     async function loadData() {
       try {
         const [empData, mgrData] = await Promise.all([getEmployees(), getManagers()]);
-        setEmployees(empData.map((e: any) => ({
+        setEmployees(empData.map((e: Employee) => ({
           value: e.employee_id,
           label: `${e.employee_first_name} ${e.employee_last_name} (${e.employee_role})`
         })));
-        setManagers(mgrData.map((m: any) => ({
+        setManagers(mgrData.map((m: Manager) => ({
           value: m.manager_id,
           label: `${m.manager_first_name} ${m.manager_last_name}`
         })));
@@ -92,7 +101,7 @@ export function ContractForm({ initialValues, onSubmit, onCancel, isLoading: isS
   loadData();
 }, []);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: ContractFormValues) => {
     setError(null);
     try {
       const result = await onSubmit({

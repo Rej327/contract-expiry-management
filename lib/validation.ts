@@ -1,3 +1,5 @@
+import { ContractFormValues } from '@/components/contracts/ContractForm';
+
 // Shared validation logic for contracts (Manual implementation, no Zod)
 
 export interface ContractValidationResult {
@@ -5,7 +7,7 @@ export interface ContractValidationResult {
   errors: Record<string, string>;
 }
 
-export const validateContract = (values: any): ContractValidationResult => {
+export const validateContract = (values: ContractFormValues): ContractValidationResult => {
   const errors: Record<string, string> = {};
 
   if (!values.contract_employee_id) errors.contract_employee_id = 'Employee is required';
@@ -45,7 +47,7 @@ export const validateContract = (values: any): ContractValidationResult => {
   };
 };
 
-export const validateRenewal = (values: any): ContractValidationResult => {
+export const validateRenewal = (values: { contract_id: string; new_expiry_date: any }): ContractValidationResult => {
   const errors: Record<string, string> = {};
 
   if (!values.contract_id) errors.contract_id = 'Contract ID is required';

@@ -34,8 +34,9 @@ export async function sendEmail({
 }
 
 import { validateContract } from "@/lib/validation";
+import { ContractFormValues } from "@/components/contracts/ContractForm";
 
-export async function createContract(contractData: any) {
+export async function createContract(contractData: ContractFormValues): Promise<{ success: boolean; message?: string; errors?: any }> {
   // Manual server-side validation
   const validation = validateContract(contractData);
   

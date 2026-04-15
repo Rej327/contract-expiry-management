@@ -7,14 +7,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
-interface ActivityRecord {
-  activity_id: string;
-  activity_action: string;
-  activity_description: string;
-  activity_created_at: string;
-  manager_first_name: string;
-  manager_last_name: string;
-}
+import { ActivityRecord } from '@/types/types';
 
 export function RecentActions({ activities }: { activities: ActivityRecord[] }) {
   const getIcon = (action: string) => {
