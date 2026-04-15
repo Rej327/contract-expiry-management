@@ -16,6 +16,7 @@ import {
   Switch,
   TextInput,
   Checkbox,
+  Select,
   Avatar,
   Progress,
   ActionIcon,
@@ -40,8 +41,15 @@ import {
 } from "@tabler/icons-react";
 import { DashboardShell } from "@/components/Layout/DashboardShell";
 import { getContractDetail, ContractDetailResponse } from "@/app/actions/get";
-import { toggleAutoRenewal, renewContract, terminateContract } from "@/app/actions/update";
-import { addContractReminder, sendContractNotification } from "@/app/actions/post";
+import {
+  toggleAutoRenewal,
+  renewContract,
+  terminateContract,
+} from "@/app/actions/update";
+import {
+  addContractReminder,
+  sendContractNotification,
+} from "@/app/actions/post";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
@@ -60,37 +68,80 @@ export default function ContractDetailPage({
   const [data, setData] = useState<ContractDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  
-  const [terminateOpened, { open: openTerminate, close: closeTerminate }] = useDisclosure(false);
-  const [reminderOpened, { open: openReminder, close: closeReminder }] = useDisclosure(false);
-  const [renewOpened, { open: openRenew, close: closeRenew }] = useDisclosure(false);
 
-  const [reminderTitle, setReminderTitle] = useState('');
+  const [terminateOpened, { open: openTerminate, close: closeTerminate }] =
+    useDisclosure(false);
+  const [reminderOpened, { open: openReminder, close: closeReminder }] =
+    useDisclosure(false);
+  const [renewOpened, { open: openRenew, close: closeRenew }] =
+    useDisclosure(false);
+
+  const [reminderTitle, setReminderTitle] = useState("");
   const [reminderDate, setReminderDate] = useState<Date | null>(new Date());
-  const [terminationNotes, setTerminationNotes] = useState('');
+  const [terminationNotes, setTerminationNotes] = useState("");
   const [newExpiryDate, setNewExpiryDate] = useState<Date | null>(null);
-  
-  const [templateOpened, { open: openTemplate, close: closeTemplate }] = useDisclosure(false);
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState('');
+
+  const [templateOpened, { open: openTemplate, close: closeTemplate }] =
+    useDisclosure(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(
+    "renewal",
+  );
 
   const fetchDetail = async () => {
     setLoading(true);
     const res = await getContractDetail(id);
     setData(res);
-    
+
     if (res?.contract) {
-        const { employee, contract_expiry_date } = res.contract;
-        setEmailSubject(`Your Contract Renewal for ${employee.employee_role}`);
-        setEmailBody(`Hi ${employee.employee_first_name},
+      const { employee, contract_expiry_date, remaining_days } = res.contract;
+
+      const templates: any = {
+        renewal: {
+          subject: `Your Contract Renewal for ${employee.employee_role}`,
+          body: `Hi ${employee.employee_first_name},
 
 We're writing to let you know that your current contract is approaching its expiration date on ${dayjs(contract_expiry_date).format("MMMM DD, YYYY")}.
 
 We've been incredibly happy with your performance as a ${employee.employee_role} and would love to extend your stay with us. Based on our auto-renewal policy, your contract will automatically extend for another 12-month period unless we hear from you otherwise.
 
-Please let your manager know if you have any questions or would like to discuss terms before the renewal date.`);
+Please let your manager know if you have any questions or would like to discuss terms before the renewal date.`,
+        },
+        warning: {
+          subject: `[ACTION REQUIRED] Your contract expires in ${remaining_days} days`,
+          body: `Hi ${employee.employee_first_name},
+
+This is a friendly reminder that your contract for the position of ${employee.employee_role} is scheduled to expire on ${dayjs(contract_expiry_date).format("MMMM DD, YYYY")}.
+
+Please reach out to your manager or HR as soon as possible to discuss your next steps and ensure there is no gap in your employment.
+
+Best regards,
+Management Team`,
+        },
+        expired: {
+          subject: `URGENT: Your contract has expired`,
+          body: `Hi ${employee.employee_first_name},
+
+Our records indicate that your contract expired on ${dayjs(contract_expiry_date).format("MMMM DD, YYYY")}.
+
+As your contract is no longer active, please contact HR immediately to finalize any outstanding documentation or discuss potential extensions.
+
+Best regards,
+Management Team`,
+        },
+      };
+
+      const current = templates[selectedTemplate || "renewal"];
+      setEmailSubject(current.subject);
+      setEmailBody(current.body);
     }
     setLoading(false);
+  };
+
+  const handleTemplateChange = (val: string | null) => {
+    setSelectedTemplate(val);
+    fetchDetail(); // Re-sync with the chosen template logic
   };
 
   useEffect(() => {
@@ -120,8 +171,12 @@ Please let your manager know if you have any questions or would like to discuss 
   const { contract, reminders, renewals } = data;
   const { employee, manager } = contract;
 
-  const totalDays = (contract.total_tenure_days || 0) + (contract.remaining_days || 0);
-  const tenurePercentage = totalDays > 0 ? Math.round(((contract.total_tenure_days || 0) / totalDays) * 100) : 0;
+  const totalDays =
+    (contract.total_tenure_days || 0) + (contract.remaining_days || 0);
+  const tenurePercentage =
+    totalDays > 0
+      ? Math.round(((contract.total_tenure_days || 0) / totalDays) * 100)
+      : 0;
 
   const handleToggleAutoRenewal = async (val: boolean) => {
     const res = await toggleAutoRenewal(contract.contract_id, val);
@@ -139,11 +194,19 @@ Please let your manager know if you have any questions or would like to discuss 
     setActionLoading(true);
     const res = await terminateContract(contract.contract_id, terminationNotes);
     if (res.success) {
-      notifications.show({ title: "Terminated", message: "Contract has been terminated", color: "green" });
+      notifications.show({
+        title: "Terminated",
+        message: "Contract has been terminated",
+        color: "green",
+      });
       closeTerminate();
       fetchDetail();
     } else {
-      notifications.show({ title: "Error", message: res.message || "Failed to terminate", color: "red" });
+      notifications.show({
+        title: "Error",
+        message: res.message || "Failed to terminate",
+        color: "red",
+      });
     }
     setActionLoading(false);
   };
@@ -154,15 +217,23 @@ Please let your manager know if you have any questions or would like to discuss 
     const res = await addContractReminder({
       contract_id: contract.contract_id,
       title: reminderTitle,
-      due_date: dayjs(reminderDate).format('YYYY-MM-DD'),
+      due_date: dayjs(reminderDate).format("YYYY-MM-DD"),
     });
     if (res.success) {
-      notifications.show({ title: "Success", message: "Reminder added", color: "green" });
-      setReminderTitle('');
+      notifications.show({
+        title: "Success",
+        message: "Reminder added",
+        color: "green",
+      });
+      setReminderTitle("");
       closeReminder();
       fetchDetail();
     } else {
-      notifications.show({ title: "Error", message: res.message || "Failed to add reminder", color: "red" });
+      notifications.show({
+        title: "Error",
+        message: res.message || "Failed to add reminder",
+        color: "red",
+      });
     }
     setActionLoading(false);
   };
@@ -202,13 +273,21 @@ Please let your manager know if you have any questions or would like to discuss 
       contractId: contract.contract_id,
       to: employee.employee_email,
       subject: emailSubject,
-      html: emailBody.replace(/\n/g, '<br>'),
+      html: emailBody.replace(/\n/g, "<br>"),
     });
 
     if (res.success) {
-      notifications.show({ title: "Email Sent", message: "Notification has been dispatched", color: "green" });
+      notifications.show({
+        title: "Email Sent",
+        message: "Notification has been dispatched",
+        color: "green",
+      });
     } else {
-      notifications.show({ title: "Failed", message: res.message || "Could not send email", color: "red" });
+      notifications.show({
+        title: "Failed",
+        message: res.message || "Could not send email",
+        color: "red",
+      });
     }
     setActionLoading(false);
   };
@@ -293,10 +372,21 @@ Please let your manager know if you have any questions or would like to discuss 
               >
                 Export PDF
               </Button>
-              <Button radius="md" color="blue" onClick={() => {
-                setNewExpiryDate(new Date(new Date(contract.contract_expiry_date).setFullYear(new Date(contract.contract_expiry_date).getFullYear() + 1)));
-                openRenew();
-              }}>
+              <Button
+                radius="md"
+                color="blue"
+                onClick={() => {
+                  setNewExpiryDate(
+                    new Date(
+                      new Date(contract.contract_expiry_date).setFullYear(
+                        new Date(contract.contract_expiry_date).getFullYear() +
+                          1,
+                      ),
+                    ),
+                  );
+                  openRenew();
+                }}
+              >
                 Renew Manually
               </Button>
             </Group>
@@ -417,7 +507,7 @@ Please let your manager know if you have any questions or would like to discuss 
                   {[
                     {
                       label: "SALARY",
-                      value: `$${Number(contract.contract_salary).toLocaleString()} /yr`,
+                      value: `₱${Number(contract.contract_salary).toLocaleString()} /yr`,
                     },
                     {
                       label: "NOTICE PERIOD",
@@ -458,17 +548,33 @@ Please let your manager know if you have any questions or would like to discuss 
                     Employee Notification Preview
                   </Text>
                   <Group gap="sm">
-                    <Button 
-                        variant="light" 
-                        size="xs" 
-                        color="blue" 
-                        onClick={handleSendNotification}
-                        loading={actionLoading}
+                    <Select
+                      size="xs"
+                      data={[
+                        { value: "renewal", label: "Renewal" },
+                        { value: "warning", label: "Expiry Warning" },
+                        { value: "expired", label: "Contract Expired" },
+                      ]}
+                      value={selectedTemplate}
+                      onChange={handleTemplateChange}
+                      style={{ width: 140 }}
+                    />
+                    <Button
+                      variant="light"
+                      size="xs"
+                      color="blue"
+                      onClick={handleSendNotification}
+                      loading={actionLoading}
                     >
-                        Send Now
+                      Send Now
                     </Button>
-                    <Anchor size="xs" fw={700} color="blue" onClick={openTemplate}>
-                        Edit Template
+                    <Anchor
+                      size="xs"
+                      fw={700}
+                      color="blue"
+                      onClick={openTemplate}
+                    >
+                      Edit Template
                     </Anchor>
                   </Group>
                 </Group>
@@ -496,7 +602,11 @@ Please let your manager know if you have any questions or would like to discuss 
                       bg="white"
                       style={{ borderRadius: 4, minHeight: 200 }}
                     >
-                      <Text size="sm" c="gray.8" style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                      <Text
+                        size="sm"
+                        c="gray.8"
+                        style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}
+                      >
                         {emailBody}
                       </Text>
                     </Box>
@@ -554,8 +664,16 @@ Please let your manager know if you have any questions or would like to discuss 
                     size="sm"
                     fw={700}
                     onClick={() => {
-                        setNewExpiryDate(new Date(new Date(contract.contract_expiry_date).setFullYear(new Date(contract.contract_expiry_date).getFullYear() + 1)));
-                        openRenew();
+                      setNewExpiryDate(
+                        new Date(
+                          new Date(contract.contract_expiry_date).setFullYear(
+                            new Date(
+                              contract.contract_expiry_date,
+                            ).getFullYear() + 1,
+                          ),
+                        ),
+                      );
+                      openRenew();
                     }}
                   >
                     Modify Renewal Terms
@@ -632,7 +750,12 @@ Please let your manager know if you have any questions or would like to discuss 
                     {contract.total_tenure_days} Days
                   </Text>
                   <Box mt="md">
-                    <Progress value={tenurePercentage} color="white" size="sm" radius="xl" />
+                    <Progress
+                      value={tenurePercentage}
+                      color="white"
+                      size="sm"
+                      radius="xl"
+                    />
                     <Group justify="space-between" mt={4}>
                       <Text size="xs" fw={700} c="blue.1">
                         {tenurePercentage}% through current term.
@@ -646,93 +769,159 @@ Please let your manager know if you have any questions or would like to discuss 
         </Grid>
       </Stack>
 
-      <Modal opened={terminateOpened} onClose={closeTerminate} title="Terminate Contract" radius="md">
+      <Modal
+        opened={terminateOpened}
+        onClose={closeTerminate}
+        title="Terminate Contract"
+        radius="md"
+      >
         <Stack>
-            <Text size="sm">Are you sure you want to terminate <b>{employee.employee_first_name}'s</b> contract? This will take effect immediately.</Text>
-            <TextInput 
-                label="Termination Notes" 
-                placeholder="Reason for termination..."
-                value={terminationNotes}
-                onChange={(e) => setTerminationNotes(e.currentTarget.value)}
-            />
-            <Group justify="flex-end">
-                <Button variant="outline" onClick={closeTerminate} disabled={actionLoading}>Cancel</Button>
-                <Button color="red" onClick={handleTerminate} loading={actionLoading}>Confirm Termination</Button>
-            </Group>
+          <Text size="sm">
+            Are you sure you want to terminate{" "}
+            <b>{employee.employee_first_name}'s</b> contract? This will take
+            effect immediately.
+          </Text>
+          <TextInput
+            label="Termination Notes"
+            placeholder="Reason for termination..."
+            value={terminationNotes}
+            onChange={(e) => setTerminationNotes(e.currentTarget.value)}
+          />
+          <Group justify="flex-end">
+            <Button
+              variant="outline"
+              onClick={closeTerminate}
+              disabled={actionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              onClick={handleTerminate}
+              loading={actionLoading}
+            >
+              Confirm Termination
+            </Button>
+          </Group>
         </Stack>
       </Modal>
 
-      <Modal opened={reminderOpened} onClose={closeReminder} title="Add Contract Reminder" radius="md">
+      <Modal
+        opened={reminderOpened}
+        onClose={closeReminder}
+        title="Add Contract Reminder"
+        radius="md"
+      >
         <Stack>
-            <TextInput 
-                label="Reminder Title" 
-                placeholder="e.g. Schedule review meeting"
-                value={reminderTitle}
-                onChange={(e) => setReminderTitle(e.currentTarget.value)}
-                withAsterisk
-            />
-            <DateInput 
-                label="Due Date"
-                value={reminderDate}
-                onChange={(val: any) => setReminderDate(val ? new Date(val) : null)}
-                withAsterisk
-                minDate={new Date()}
-            />
-            <Group justify="flex-end">
-                <Button variant="outline" onClick={closeReminder} disabled={actionLoading}>Cancel</Button>
-                <Button onClick={handleAddReminder} loading={actionLoading} disabled={!reminderTitle || !reminderDate}>Add Reminder</Button>
-            </Group>
+          <TextInput
+            label="Reminder Title"
+            placeholder="e.g. Schedule review meeting"
+            value={reminderTitle}
+            onChange={(e) => setReminderTitle(e.currentTarget.value)}
+            withAsterisk
+          />
+          <DateInput
+            label="Due Date"
+            value={reminderDate}
+            onChange={(val: any) => setReminderDate(val ? new Date(val) : null)}
+            withAsterisk
+            minDate={new Date()}
+          />
+          <Group justify="flex-end">
+            <Button
+              variant="outline"
+              onClick={closeReminder}
+              disabled={actionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddReminder}
+              loading={actionLoading}
+              disabled={!reminderTitle || !reminderDate}
+            >
+              Add Reminder
+            </Button>
+          </Group>
         </Stack>
       </Modal>
 
-      <Modal opened={renewOpened} onClose={closeRenew} title="Renew Contract" radius="md">
+      <Modal
+        opened={renewOpened}
+        onClose={closeRenew}
+        title="Renew Contract"
+        radius="md"
+      >
         <Stack>
-            <Text size="sm">Select new expiry date for 12-month extension or custom period.</Text>
-            <DateInput 
-                label="New Expiry Date"
-                value={newExpiryDate}
-                onChange={(val: any) => setNewExpiryDate(val ? new Date(val) : null)}
-                withAsterisk
-                minDate={new Date(contract.contract_expiry_date)}
-            />
-            <Group justify="flex-end">
-                <Button variant="outline" onClick={closeRenew} disabled={actionLoading}>Cancel</Button>
-                <Button onClick={handleManualRenew} loading={actionLoading} disabled={!newExpiryDate}>Confirm Renewal</Button>
-            </Group>
+          <Text size="sm">
+            Select new expiry date for 12-month extension or custom period.
+          </Text>
+          <DateInput
+            label="New Expiry Date"
+            value={newExpiryDate}
+            onChange={(val: any) =>
+              setNewExpiryDate(val ? new Date(val) : null)
+            }
+            withAsterisk
+            minDate={new Date(contract.contract_expiry_date)}
+          />
+          <Group justify="flex-end">
+            <Button
+              variant="outline"
+              onClick={closeRenew}
+              disabled={actionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleManualRenew}
+              loading={actionLoading}
+              disabled={!newExpiryDate}
+            >
+              Confirm Renewal
+            </Button>
+          </Group>
         </Stack>
       </Modal>
 
-      <Modal opened={templateOpened} onClose={closeTemplate} title="Edit Email Template" size="lg" radius="md">
+      <Modal
+        opened={templateOpened}
+        onClose={closeTemplate}
+        title="Edit Email Template"
+        size="lg"
+        radius="md"
+      >
         <Stack>
-            <TextInput 
-                label="Email Subject" 
-                value={emailSubject} 
-                onChange={(e) => setEmailSubject(e.currentTarget.value)} 
-            />
-            <Textarea 
-                label="Email Body" 
-                rows={10} 
-                value={emailBody} 
-                onChange={(e) => setEmailBody(e.currentTarget.value)} 
-            />
-            <Group justify="flex-end">
-                <Button onClick={closeTemplate}>Save Preview</Button>
-            </Group>
+          <TextInput
+            label="Email Subject"
+            value={emailSubject}
+            onChange={(e) => setEmailSubject(e.currentTarget.value)}
+          />
+          <Textarea
+            label="Email Body"
+            rows={10}
+            value={emailBody}
+            onChange={(e) => setEmailBody(e.currentTarget.value)}
+          />
+          <Group justify="flex-end">
+            <Button onClick={closeTemplate}>Save Preview</Button>
+          </Group>
         </Stack>
       </Modal>
 
       <style jsx global>{`
         @media print {
-          .hide-on-print, 
-          header, 
-          nav, 
-          aside, 
+          .hide-on-print,
+          header,
+          nav,
+          aside,
           button:not(.show-on-print),
           .mantine-Breadcrumbs-root {
             display: none !important;
           }
-          
-          main, .mantine-AppShell-main {
+
+          main,
+          .mantine-AppShell-main {
             padding: 0 !important;
             margin: 0 !important;
             width: 100% !important;
