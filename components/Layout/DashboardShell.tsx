@@ -26,7 +26,7 @@ const sidebarData = [
     links: [
       { label: 'Dashboard', icon: IconLayoutDashboard, link: '/' },
       { label: 'Contracts', icon: IconFileCertificate, link: '/contracts' },
-      { label: 'Employees', icon: IconUsers, link: '/employees' },
+      { label: 'Renewal Logs', icon: IconHistory, link: '/renewals' },
     ]
   },
   {
