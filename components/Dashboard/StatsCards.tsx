@@ -13,6 +13,8 @@ import {
   IconAlertTriangle,
   IconHourglassHigh,
   IconFiles,
+  IconTrendingUp,
+  IconCheck,
 } from "@tabler/icons-react";
 
 interface StatsProps {
@@ -28,23 +30,38 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
       value: total.toString(),
       icon: IconFiles,
       color: "blue",
+      indicator: {
+        icon: IconTrendingUp,
+        text: "Across organization",
+        color: "blue.6",
+      }
     },
     {
       title: "EXPIRING SOON",
       value: expiringSoon.toString(),
       icon: IconHourglassHigh,
       color: "orange",
+      indicator: {
+        icon: IconAlertTriangle,
+        text: "Action required",
+        color: "orange.6",
+      }
     },
     {
       title: "EXPIRED",
       value: expired.toString(),
       icon: IconAlertTriangle,
       color: "red",
+      indicator: {
+        icon: expired > 0 ? IconAlertTriangle : IconCheck,
+        text: expired > 0 ? "Immediate attention" : "No active expirations",
+        color: expired > 0 ? "red.6" : "teal.6",
+      }
     },
   ];
 
   return (
-    <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg" mb="xl">
+    <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl" mb="xl">
       {stats.map((stat) => (
         <Paper
           key={stat.title}
@@ -53,29 +70,19 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
           withBorder
           shadow="sm"
           style={{
-            overflow: "hidden",
-            position: "relative",
             background: "white",
             borderTop: `4px solid var(--mantine-color-${stat.color}-6)`,
             transition: "transform 0.2s ease, box-shadow 0.2s ease",
-            cursor: "default",
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-4px)";
-            e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "var(--mantine-shadow-sm)";
-          }}
+          className="stats-card-hover"
         >
-          <Group justify="space-between">
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
             <Box>
               <Text
                 size="xs"
                 fw={700}
                 c="dimmed"
-                style={{ letterSpacing: 1.2, textTransform: "uppercase" }}
+                style={{ letterSpacing: 0.5, textTransform: "uppercase" }}
               >
                 {stat.title}
               </Text>
@@ -83,41 +90,45 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
                 order={1}
                 fw={900}
                 mt={4}
-                style={{ fontSize: "2rem", letterSpacing: -1 }}
+                style={{ fontSize: "2.2rem", letterSpacing: -1 }}
               >
                 {stat.value}
               </Title>
+              <Group gap={4} mt="xs">
+                {stat.indicator && (
+                  <>
+                    <stat.indicator.icon 
+                      size={14} 
+                      color={`var(--mantine-color-${stat.indicator.color.split('.')[0]}-${stat.indicator.color.split('.')[1] || '6'})`} 
+                    />
+                    <Text size="xs" fw={700} c={stat.indicator.color}>
+                      {stat.indicator.text}
+                    </Text>
+                  </>
+                )}
+              </Group>
             </Box>
             <ThemeIcon
-              size={60}
-              radius="lg"
+              size={48}
+              radius="md"
               variant="light"
               color={stat.color}
-              style={{
-                backgroundColor: `var(--mantine-color-${stat.color}-light)`,
-                boxShadow: `0 8px 16px -4px var(--mantine-color-${stat.color}-light-color)`,
-              }}
             >
               <stat.icon
-                style={{ width: "30px", height: "30px" }}
+                style={{ width: "24px", height: "24px" }}
                 stroke={2}
               />
             </ThemeIcon>
           </Group>
-          {/* Subtle background decoration */}
-          <Box
-            style={{
-              position: "absolute",
-              bottom: -20,
-              right: -20,
-              opacity: 0.05,
-              transform: "rotate(-15deg)",
-            }}
-          >
-            <stat.icon size={120} stroke={1.5} />
-          </Box>
         </Paper>
       ))}
+
+      <style jsx global>{`
+        .stats-card-hover:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--mantine-shadow-md);
+        }
+      `}</style>
     </SimpleGrid>
   );
 }
