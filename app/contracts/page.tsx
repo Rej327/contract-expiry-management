@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { Stack, Title, Text, Box, Modal, Button, Group } from "@mantine/core";
+import { Stack, Title, Text, Box, Modal, Button, Group, Loader, Center } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import { IconAlertCircle, IconPlus } from "@tabler/icons-react";
 import { DataTableSortStatus } from "mantine-datatable";
 import { DashboardShell } from "@/components/Layout/DashboardShell";
 import { StatsCards } from "@/components/Dashboard/StatsCards";
@@ -17,7 +17,7 @@ import {
   getContractList,
   getRecentActivityLogs,
 } from "@/app/actions/get";
-import { createContract } from "@/app/actions/post";
+import { createContract, sendBulkContractNotifications, notifyContract } from "@/app/actions/post";
 import { updateContract, renewContract } from "@/app/actions/update";
 import { deleteContract } from "@/app/actions/delete";
 import { ContractForm } from "@/components/contracts/ContractForm";
@@ -56,6 +56,9 @@ export default function ContractsPage() {
 
   const [selectedContract, setSelectedContract] =
     useState<ContractRecord | null>(null);
+  const [notifyBatchCount, setNotifyBatchCount] = useState(0);
+  const [currentNotifyIndex, setCurrentNotifyIndex] = useState(0);
+  const [notifyLoadingOpened, { open: openNotifyLoading, close: closeNotifyLoading }] = useDisclosure(false);
 
   const fetchStats = async () => {
     const data = await getDashboardStats();
@@ -175,6 +178,49 @@ export default function ContractsPage() {
     setLoading(false);
   };
 
+  const handleBulkNotify = async (records: ContractRecord[]) => {
+    setNotifyBatchCount(records.length);
+    setCurrentNotifyIndex(0);
+    openNotifyLoading();
+    
+    let successCount = 0;
+    try {
+      for (let i = 0; i < records.length; i++) {
+        setCurrentNotifyIndex(i + 1);
+        const result = await notifyContract(records[i]);
+        if (result.success) successCount++;
+      }
+
+      const allSuccess = successCount === records.length;
+      const allFailed = successCount === 0;
+
+      notifications.show({
+        title: allSuccess
+          ? "All Notifications Sent"
+          : allFailed
+            ? "Multiple Sending Failures"
+            : "Notifications Partially Sent",
+        message: allSuccess
+          ? `Great! All ${records.length} employees have been successfully notified of their contract status.`
+          : allFailed
+            ? `We couldn't reach any of the ${records.length} employees. Please check your email configuration or network.`
+            : `Completed with warnings: ${successCount} sent out of ${records.length}. Some employees may not have received their alerts.`,
+        color: allSuccess ? "green" : allFailed ? "red" : "orange",
+        autoClose: allSuccess ? 5000 : false, // Keep it open if there are errors
+      });
+      fetchAllData();
+    } catch (error: any) {
+      notifications.show({
+        title: "Unexpected Error",
+        message:
+          error.message || "An error occurred while sending notifications",
+        color: "red",
+      });
+    } finally {
+      closeNotifyLoading();
+    }
+  };
+
   useEffect(() => {
     fetchStats();
     fetchRecentActions();
@@ -192,7 +238,7 @@ export default function ContractsPage() {
             <Title order={2} fw={800} style={{ letterSpacing: -0.5 }}>
               All Contracts
             </Title>
-            <Text c="gray.8" size="sm" mt={4}>
+            <Text c="dimmed" size="sm" mt={4}>
               Review and manage upcoming employee contract expirations.
             </Text>
           </Box>
@@ -230,6 +276,7 @@ export default function ContractsPage() {
             setSelectedContract(record);
             openRenew();
           }}
+          onNotify={handleBulkNotify}
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
         />
@@ -266,28 +313,57 @@ export default function ContractsPage() {
         <Modal
           opened={deleteOpened}
           onClose={closeDelete}
-          title="Delete Contract"
-          radius="md"
-        >
-          <Stack>
-            <Text>
-              Are you sure you want to delete the contract for{" "}
-              <b>
-                {selectedContract?.employee_first_name}{" "}
-                {selectedContract?.employee_last_name}
-              </b>
-              ? This action cannot be undone.
+          title={
+            <Text fw={800} size="lg" c="red.7">
+              Danger Zone
             </Text>
+          }
+          radius="md"
+          centered
+        >
+          <Stack gap="lg">
+            <Box
+              p="md"
+              style={{
+                backgroundColor:
+                  "rgba(var(--mantine-color-red-light-color), 0.1)",
+                borderRadius: "8px",
+                border: "1px solid var(--mantine-color-red-light-outline)",
+              }}
+            >
+              <Group gap="xs" mb="xs">
+                <IconAlertCircle color="red" size={20} />
+                <Text size="sm" fw={700} c="red">
+                  Permanent Action
+                </Text>
+              </Group>
+              <Text size="sm">
+                Are you sure you want to delete the contract for{" "}
+                <Text component="span" fw={800}>
+                  {selectedContract?.employee_first_name}{" "}
+                  {selectedContract?.employee_last_name}
+                </Text>
+                ? This action cannot be undone and will remove all history.
+              </Text>
+            </Box>
+
             <Group justify="flex-end">
               <Button
-                variant="outline"
+                variant="subtle"
+                color="gray"
                 onClick={closeDelete}
                 disabled={loading}
               >
                 Cancel
               </Button>
-              <Button color="red" onClick={handleDelete} loading={loading}>
-                Delete
+              <Button
+                color="red"
+                onClick={handleDelete}
+                loading={loading}
+                px="xl"
+                radius="md"
+              >
+                Delete Permanently
               </Button>
             </Group>
           </Stack>
@@ -296,22 +372,63 @@ export default function ContractsPage() {
         <Modal
           opened={renewOpened}
           onClose={closeRenew}
-          title="Renew Contract"
+          title={
+            <Text fw={800} size="lg">
+              Renew Contract
+            </Text>
+          }
           radius="md"
+          size="md"
+          centered
         >
-          <Stack>
-            <Text size="sm">
-              Quick renew for{" "}
-              <b>
+          <Stack gap="lg">
+            <Box
+              p="md"
+              style={{
+                backgroundColor:
+                  "rgba(var(--mantine-color-blue-light-color), 0.1)",
+                borderRadius: "8px",
+                border: "1px solid var(--mantine-color-blue-light-outline)",
+              }}
+            >
+              <Text size="sm" fw={600} c="blue" mb={4}>
+                Renewing contract for:
+              </Text>
+              <Text size="md" fw={800}>
                 {selectedContract?.employee_first_name}{" "}
                 {selectedContract?.employee_last_name}
-              </b>
-              .
-            </Text>
+              </Text>
+              <Group mt="md" gap="xl">
+                <div>
+                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+                    Current Expiry
+                  </Text>
+                  <Text size="sm" fw={700}>
+                    {selectedContract?.contract_expiry_date
+                      ? dayjs(selectedContract.contract_expiry_date).format(
+                          "MMM DD, YYYY",
+                        )
+                      : "N/A"}
+                  </Text>
+                </div>
+                <div>
+                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+                    Action
+                  </Text>
+                  <Text size="sm" fw={700} c="blue.7">
+                    Extending Term
+                  </Text>
+                </div>
+              </Group>
+            </Box>
+
             <DateInput
               label="New Expiry Date"
-              placeholder="Select date"
+              description="When should the renewed contract expire?"
+              placeholder="Select future date"
               minDate={new Date()}
+              required
+              radius="md"
               value={
                 selectedContract?.contract_expiry_date
                   ? new Date(selectedContract.contract_expiry_date)
@@ -328,8 +445,14 @@ export default function ContractsPage() {
                 }
               }}
             />
-            <Group justify="flex-end">
-              <Button variant="outline" onClick={closeRenew} disabled={loading}>
+
+            <Group justify="flex-end" mt="md">
+              <Button
+                variant="subtle"
+                color="gray"
+                onClick={closeRenew}
+                disabled={loading}
+              >
                 Cancel
               </Button>
               <Button
@@ -341,11 +464,56 @@ export default function ContractsPage() {
                   })
                 }
                 loading={loading}
+                px="xl"
+                radius="md"
               >
-                Renew
+                Confirm Renewal
               </Button>
             </Group>
           </Stack>
+        </Modal>
+
+        <Modal
+          opened={notifyLoadingOpened}
+          onClose={() => {}} // Prevent closing
+          withCloseButton={false}
+          centered
+          radius="md"
+          size="sm"
+          overlayProps={{
+            blur: 3,
+            opacity: 0.55,
+          }}
+        >
+          <Center p="xl">
+            <Stack align="center" gap="lg">
+              <Loader size="xl" variant="bars" />
+              <Box style={{ textAlign: "center" }}>
+                <Text fw={800} size="lg" mb={4}>
+                  Sending Notifications
+                </Text>
+                <Text c="dimmed" size="sm">
+                  Processing{" "}
+                  <Text span fw={800} c="blue">
+                    {currentNotifyIndex}
+                  </Text>{" "}
+                  of{" "}
+                  <Text span fw={800} c="blue">
+                    {notifyBatchCount}
+                  </Text>{" "}
+                  employee blasts...
+                </Text>
+                <Box mt="md" w="100%">
+                  <Loader
+                    size="xs"
+                    w="100%"
+                    type="dots"
+                    color="blue"
+                  />
+                </Box>
+              </Box>
+            </Stack>
+          </Center>
         </Modal>
 
         <RecentActions activities={actions} />

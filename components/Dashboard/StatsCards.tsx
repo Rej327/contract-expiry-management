@@ -34,7 +34,7 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
         icon: IconTrendingUp,
         text: "Across organization",
         color: "blue.6",
-      }
+      },
     },
     {
       title: "EXPIRING SOON",
@@ -45,7 +45,7 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
         icon: IconAlertTriangle,
         text: "Action required",
         color: "orange.6",
-      }
+      },
     },
     {
       title: "EXPIRED",
@@ -56,7 +56,7 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
         icon: expired > 0 ? IconAlertTriangle : IconCheck,
         text: expired > 0 ? "Immediate attention" : "No active expirations",
         color: expired > 0 ? "red.6" : "teal.6",
-      }
+      },
     },
   ];
 
@@ -70,7 +70,6 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
           withBorder
           shadow="sm"
           style={{
-            background: "white",
             borderTop: `4px solid var(--mantine-color-${stat.color}-6)`,
             transition: "transform 0.2s ease, box-shadow 0.2s ease",
           }}
@@ -97,9 +96,9 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
               <Group gap={4} mt="xs">
                 {stat.indicator && (
                   <>
-                    <stat.indicator.icon 
-                      size={14} 
-                      color={`var(--mantine-color-${stat.indicator.color.split('.')[0]}-${stat.indicator.color.split('.')[1] || '6'})`} 
+                    <stat.indicator.icon
+                      size={14}
+                      color={`var(--mantine-color-${stat.indicator.color.split(".")[0]}-${stat.indicator.color.split(".")[1] || "6"})`}
                     />
                     <Text size="xs" fw={700} c={stat.indicator.color}>
                       {stat.indicator.text}
@@ -108,16 +107,8 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
                 )}
               </Group>
             </Box>
-            <ThemeIcon
-              size={48}
-              radius="md"
-              variant="light"
-              color={stat.color}
-            >
-              <stat.icon
-                style={{ width: "24px", height: "24px" }}
-                stroke={2}
-              />
+            <ThemeIcon size={48} radius="md" variant="light" color={stat.color}>
+              <stat.icon style={{ width: "24px", height: "24px" }} stroke={2} />
             </ThemeIcon>
           </Group>
         </Paper>

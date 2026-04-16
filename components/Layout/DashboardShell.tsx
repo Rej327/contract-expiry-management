@@ -1,41 +1,56 @@
-'use client';
+"use client";
 
-import { AppShell, Burger, Group, NavLink, Text, Title, Avatar, UnstyledButton, Menu, ScrollArea, Box, ActionIcon, useMantineColorScheme, Tooltip } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { 
-  IconFileCertificate, 
-  IconHistory, 
-  IconListCheck, 
-  IconBell, 
-  IconUsers, 
-  IconLayoutDashboard, 
+import {
+  AppShell,
+  Burger,
+  Group,
+  NavLink,
+  Text,
+  Title,
+  Avatar,
+  UnstyledButton,
+  Menu,
+  ScrollArea,
+  Box,
+  ActionIcon,
+  useMantineColorScheme,
+  Tooltip,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  IconFileCertificate,
+  IconHistory,
+  IconListCheck,
+  IconBell,
+  IconUsers,
+  IconLayoutDashboard,
   IconSettings,
   IconSun,
   IconMoon,
   IconLogout,
   IconSearch,
   IconChevronRight,
-  IconPointFilled
-} from '@tabler/icons-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+  IconPointFilled,
+} from "@tabler/icons-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const sidebarData = [
   {
-    label: 'MAIN MENU',
+    label: "MAIN MENU",
     links: [
-      { label: 'Dashboard', icon: IconLayoutDashboard, link: '/' },
-      { label: 'Contracts', icon: IconFileCertificate, link: '/contracts' },
-      { label: 'Renewal Logs', icon: IconHistory, link: '/renewals' },
-    ]
+      { label: "Dashboard", icon: IconLayoutDashboard, link: "/" },
+      { label: "Contracts", icon: IconFileCertificate, link: "/contracts" },
+      { label: "Renewal Logs", icon: IconHistory, link: "/renewals" },
+    ],
   },
   {
-    label: 'ADMINISTRATION',
+    label: "ADMINISTRATION",
     links: [
-      { label: 'Reports', icon: IconListCheck, link: '/reports' },
-      { label: 'Settings', icon: IconSettings, link: '/settings' },
-    ]
-  }
+      { label: "Reports", icon: IconListCheck, link: "/reports" },
+      { label: "Settings", icon: IconSettings, link: "/settings" },
+    ],
+  },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -48,47 +63,87 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       header={{ height: 70 }}
       navbar={{
         width: 260,
-        breakpoint: 'sm',
+        breakpoint: "sm",
         collapsed: { mobile: !opened },
       }}
       padding="xl"
       styles={(theme) => ({
         main: {
-          backgroundColor: colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+          backgroundColor:
+            colorScheme === "dark"
+              ? theme.colors.dark[8]
+              : theme.colors.gray[0],
         },
       })}
     >
       <AppShell.Header p="md">
         <Group h="100%" px="md" justify="space-between">
           <Group>
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+            />
             <Group gap={8}>
               <Box bg="blue" p={6} style={{ borderRadius: 8 }}>
                 <IconFileCertificate size={24} color="white" />
               </Box>
-              <Title order={3} fw={800} style={{ letterSpacing: -0.5 }}>Formsly</Title>
+              <Title order={3} fw={800} style={{ letterSpacing: -0.5 }}>
+                Formsly
+              </Title>
             </Group>
           </Group>
 
           <Group gap="sm">
-            <Group gap={4} visibleFrom="md" bg={colorScheme === 'dark' ? 'dark.6' : 'white'} px={10} py={4} style={{ borderRadius: 100, border: `1px solid var(--mantine-color-gray-2)` }}>
+            <Group
+              gap={4}
+              visibleFrom="md"
+              bg={colorScheme === "dark" ? "dark.6" : "white"}
+              px={10}
+              py={4}
+              style={{
+                borderRadius: 100,
+                border: `1px solid var(--mantine-color-${colorScheme === "dark" ? "dark.2" : "gray-2"})`,
+              }}
+            >
               <IconPointFilled size={12} color="var(--mantine-color-green-6)" />
-              <Text size="xs" fw={600} c="gray.7">System Online</Text>
+              <Text
+                size="xs"
+                fw={600}
+                c={colorScheme === "dark" ? "gray.2" : "gray.7"}
+              >
+                System Online
+              </Text>
             </Group>
-            
+
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
-                <Avatar radius="xl" color="blue" src={null} alt="JD" style={{ cursor: 'pointer' }}>JD</Avatar>
+                <Avatar
+                  radius="xl"
+                  color="blue"
+                  src={null}
+                  alt="JD"
+                  style={{ cursor: "pointer" }}
+                >
+                  JD
+                </Avatar>
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Label>Application</Menu.Label>
-                <Menu.Item leftSection={<IconSettings style={{ width: '14px', height: '14px' }} />}>
+                <Menu.Item
+                  leftSection={
+                    <IconSettings style={{ width: "14px", height: "14px" }} />
+                  }
+                >
                   Settings
                 </Menu.Item>
                 <Menu.Divider />
                 <Menu.Item
                   color="red"
-                  leftSection={<IconLogout style={{ width: '14px', height: '14px' }} />}
+                  leftSection={
+                    <IconLogout style={{ width: "14px", height: "14px" }} />
+                  }
                 >
                   Logout
                 </Menu.Item>
@@ -103,7 +158,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <Box mt="md">
             {sidebarData.map((section) => (
               <Box key={section.label} mb="xl">
-                <Text size="xs" fw={700} c="gray.7" mb={8} px="sm" style={{ letterSpacing: 0.5 }}>
+                <Text
+                  size="xs"
+                  fw={700}
+                  c="gray.7"
+                  mb={8}
+                  px="sm"
+                  style={{ letterSpacing: 0.5 }}
+                >
                   {section.label}
                 </Text>
                 {section.links.map((link) => (
@@ -120,8 +182,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                         borderRadius: theme.radius.md,
                         marginBottom: 4,
                         fontWeight: 500,
-                        backgroundColor: pathname === link.link ? (colorScheme === 'dark' ? theme.colors.blue[9] : theme.colors.blue[0]) : undefined,
-                        color: pathname === link.link ? (colorScheme === 'dark' ? theme.colors.blue[0] : theme.colors.blue[7]) : undefined,
+                        backgroundColor:
+                          pathname === link.link
+                            ? colorScheme === "dark"
+                              ? theme.colors.blue[9]
+                              : theme.colors.blue[0]
+                            : undefined,
+                        color:
+                          pathname === link.link
+                            ? colorScheme === "dark"
+                              ? theme.colors.blue[0]
+                              : theme.colors.blue[7]
+                            : undefined,
                       },
                     })}
                   />
@@ -132,7 +204,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </AppShell.Section>
 
         <AppShell.Section>
-          <Box pt="md" style={{ borderTop: `1px solid var(--mantine-color-${colorScheme === 'dark' ? 'dark.4' : 'gray.2'})` }}>
+          <Box
+            pt="md"
+            style={{
+              borderTop: `1px solid var(--mantine-color-${colorScheme === "dark" ? "dark.4" : "gray.2"})`,
+            }}
+          >
             <UnstyledButton
               onClick={() => toggleColorScheme()}
               mb="md"
@@ -143,17 +220,27 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             >
               <Group justify="space-between">
                 <Group gap="sm">
-                  {colorScheme === 'dark' ? <IconSun size={18} stroke={1.5} /> : <IconMoon size={18} stroke={1.5} />}
+                  {colorScheme === "dark" ? (
+                    <IconSun size={18} stroke={1.5} />
+                  ) : (
+                    <IconMoon size={18} stroke={1.5} />
+                  )}
                   <Text size="sm">Theme Toggle</Text>
                 </Group>
               </Group>
             </UnstyledButton>
 
             <Group px="sm" py="md">
-              <Avatar radius="xl" color="green">JD</Avatar>
+              <Avatar radius="xl" color="green">
+                JD
+              </Avatar>
               <Box style={{ flex: 1 }}>
-                <Text size="sm" fw={600}>Jane Doe</Text>
-                <Text size="xs" c="gray.7">HR Admin</Text>
+                <Text size="sm" fw={600}>
+                  Jane Doe
+                </Text>
+                <Text size="xs" c="gray.7">
+                  HR Admin
+                </Text>
               </Box>
               <ActionIcon variant="subtle" color="gray">
                 <IconSettings size={16} stroke={1.5} />

@@ -169,7 +169,7 @@ export default function RenewalLogsPage() {
               <Title order={2} fw={800} style={{ letterSpacing: -1.5 }}>
                 Renewal Logs
               </Title>
-              <Text c="gray.8" size="sm" mt={4}>
+              <Text c="dimmed" size="sm" mt={4}>
                 Track and review past contract renewals across the organization.
               </Text>
             </Box>
@@ -291,8 +291,7 @@ export default function RenewalLogsPage() {
           <Box
             p="lg"
             style={{
-              borderBottom: "1px solid var(--mantine-color-gray-2)",
-              backgroundColor: "white",
+              borderBottom: "1px solid var(--mantine-color-default-border)",
             }}
           >
             <Group justify="space-between">
@@ -473,7 +472,7 @@ export default function RenewalLogsPage() {
                       <Text size="sm" fw={700}>
                         {record.employee_first_name} {record.employee_last_name}
                       </Text>
-                      <Text size="xs" c="gray.7">
+                      <Text size="xs" c="dimmed">
                         {record.employee_role}
                       </Text>
                     </Box>
@@ -486,12 +485,7 @@ export default function RenewalLogsPage() {
                 sortable: true,
                 render: (record) => (
                   <Box>
-                    <Text
-                      size="xs"
-                      fw={700}
-                      c="gray.7"
-                      style={{ letterSpacing: 0.5 }}
-                    >
+                    <Text size="xs" fw={700} style={{ letterSpacing: 0.5 }}>
                       {record.contract_type.replace("_", " ")}
                     </Text>
                   </Box>
@@ -502,7 +496,7 @@ export default function RenewalLogsPage() {
                 title: "PREV. EXPIRY",
                 sortable: true,
                 render: (record) => (
-                  <Text size="sm" c="gray.6" fw={500}>
+                  <Text size="sm" fw={500}>
                     {dayjs(record.renewal_previous_expiry).format(
                       "MMM DD, YYYY",
                     )}
@@ -586,10 +580,10 @@ export default function RenewalLogsPage() {
             styles={{
               header: {
                 background: "transparent",
-                borderBottom: "1px solid var(--mantine-color-gray-2)",
+                borderBottom: "1px solid var(--mantine-color-default-border)",
                 fontSize: "10px",
                 fontWeight: 800,
-                color: "var(--mantine-color-gray-7)",
+                color: "var(--mantine-color-dimmed)",
                 letterSpacing: "1px",
               },
             }}

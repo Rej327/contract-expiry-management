@@ -63,6 +63,7 @@ interface ContractTableProps {
   onEdit: (record: ContractRecord) => void;
   onDelete: (record: ContractRecord) => void;
   onRenew: (record: ContractRecord) => void;
+  onNotify: (records: ContractRecord[]) => void;
   sortStatus: DataTableSortStatus<ContractRecord>;
   onSortStatusChange: (status: DataTableSortStatus<ContractRecord>) => void;
 }
@@ -76,6 +77,7 @@ export function ContractTable({
   onEdit,
   onDelete,
   onRenew,
+  onNotify,
   sortStatus,
   onSortStatusChange,
 }: ContractTableProps) {
@@ -154,12 +156,12 @@ export function ContractTable({
     <Paper radius="md" withBorder shadow="sm">
       <Box
         p="md"
-        style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+        style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
       >
         <Group justify="space-between">
           <Group gap="xl">
             <Group gap={8}>
-              <Text size="sm" fw={600} c="gray.7">
+              <Text size="sm" fw={600} c="dimmed">
                 Selected ({selectedRecords.length})
               </Text>
             </Group>
@@ -168,6 +170,7 @@ export function ContractTable({
               leftSection={<IconMail size={16} />}
               disabled={selectedRecords.length === 0}
               radius="md"
+              onClick={() => onNotify(selectedRecords)}
             >
               Notify
             </Button>
@@ -240,7 +243,7 @@ export function ContractTable({
                   >
                     {record.employee_first_name} {record.employee_last_name}
                   </Text>
-                  <Text size="xs" c="gray.7">
+                  <Text size="xs" c="dimmed">
                     {record.employee_role}
                   </Text>
                 </div>
@@ -338,10 +341,10 @@ export function ContractTable({
         styles={{
           header: {
             background: "transparent",
-            borderBottom: "1px solid var(--mantine-color-gray-2)",
+            borderBottom: "1px solid var(--mantine-color-default-border)",
             fontSize: "10px",
             fontWeight: 800,
-            color: "var(--mantine-color-gray-7)",
+            color: "var(--mantine-color-dimmed)",
             letterSpacing: "1px",
           },
         }}

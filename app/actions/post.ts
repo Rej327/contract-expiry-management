@@ -100,3 +100,57 @@ export async function addContractReminder(reminderData: {
   }
   return data as { success: boolean; message?: string };
 }
+
+export async function notifyContract(
+  record: any,
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const daysLeft = record.remaining_days;
+    const subject = `Contract Expiry Warning: ${record.employee_first_name} ${record.employee_last_name}`;
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+        <h2 style="color: #228be6;">Contract Expiry Notification</h2>
+        <p>Dear <strong>${record.manager_first_name} ${record.manager_last_name}</strong>,</p>
+        <p>This is a notification regarding the contract for <strong>${record.employee_first_name} ${record.employee_last_name}</strong>.</p>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Role:</strong> ${record.employee_role}</p>
+          <p style="margin: 5px 0;"><strong>Expiry Date:</strong> ${record.contract_expiry_date}</p>
+          <p style="margin: 5px 0; color: ${daysLeft < 30 ? "#e03131" : "#e67700"}; font-weight: bold;">
+            <strong>Days Remaining:</strong> ${daysLeft} Days
+          </p>
+        </div>
+        <p>Please take the necessary actions to review or renew this contract before it expires.</p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #868e96; text-align: center;">Sent via Formsly Contract Management System</p>
+      </div>
+    `;
+
+    return await sendContractNotification({
+      contractId: record.contract_id,
+      to: record.employee_email,
+      subject,
+      html,
+    });
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}
+
+export async function sendBulkContractNotifications(
+  records: any[],
+): Promise<{ success: boolean; message: string; results: any[] }> {
+  const results = [];
+  let successCount = 0;
+
+  for (const record of records) {
+    const result = await notifyContract(record);
+    results.push({ id: record.contract_id, ...result });
+    if (result.success) successCount++;
+  }
+
+  return {
+    success: successCount > 0,
+    message: `Successfully sent ${successCount} of ${records.length} notifications.`,
+    results,
+  };
+}
