@@ -466,6 +466,7 @@ export type Database = {
       get_managers: { Args: { input_data?: Json }; Returns: Json };
       get_notification_templates: { Args: { input_data: Json }; Returns: Json };
       get_recent_activity_logs: { Args: { input_data: Json }; Returns: Json };
+      get_renewal_logs: { Args: { input_data: Json }; Returns: Json };
       log_notification_sent: { Args: { input_data: Json }; Returns: Json };
       renew_contract: { Args: { input_data: Json }; Returns: Json };
       save_automation_rule: { Args: { input_data: Json }; Returns: Json };
