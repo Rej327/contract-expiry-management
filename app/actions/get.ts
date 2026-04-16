@@ -133,6 +133,7 @@ export interface RenewalLogRecord {
   employee_role: string;
   manager_first_name: string;
   manager_last_name: string;
+  contract_status: string;
 }
 
 export interface RenewalLogsResponse {
@@ -151,9 +152,25 @@ export async function getRenewalLogs(
   page: number,
   limit: number = 10,
   search: string = "",
+  status?: string,
+  type?: string,
+  isAuto?: boolean,
+  sortBy: string = "renewal_created_at",
+  sortOrder: "ASC" | "DESC" = "DESC",
+  embedding?: number[],
 ): Promise<RenewalLogsResponse> {
   const { data, error } = await supabase.rpc("get_renewal_logs", {
-    input_data: { page, limit, search },
+    input_data: { 
+      page, 
+      limit, 
+      search,
+      status: status || null,
+      type: type || null,
+      is_auto: isAuto !== undefined ? isAuto : null,
+      sort_by: sortBy,
+      sort_order: sortOrder,
+      embedding: embedding ? `[${embedding.join(',')}]` : null
+    },
   });
   if (error) {
     console.error("Error fetching renewal logs:", error);
@@ -166,4 +183,16 @@ export async function getRenewalLogs(
     };
   }
   return data as unknown as RenewalLogsResponse;
+}
+
+export async function getAllRenewalLogsForExport(): Promise<RenewalLogRecord[]> {
+  const { data, error } = await supabase.rpc("get_renewal_logs", {
+    input_data: { page: 1, limit: 10000 },
+  });
+  if (error) {
+    console.error("Error fetching all renewal logs for export:", error);
+    return [];
+  }
+  const result = data as unknown as RenewalLogsResponse;
+  return result.data;
 }

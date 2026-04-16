@@ -17,6 +17,9 @@ import {
   Button,
   Breadcrumbs,
   Anchor,
+  Popover,
+  Select,
+  Divider,
 } from "@mantine/core";
 import {
   IconHistory,
@@ -28,11 +31,16 @@ import {
   IconChartBar,
   IconCheck,
   IconChevronRight,
+  IconFilterX,
 } from "@tabler/icons-react";
-import { DataTable } from "mantine-datatable";
+import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import dayjs from "dayjs";
 import { DashboardShell } from "@/components/Layout/DashboardShell";
-import { getRenewalLogs, RenewalLogRecord } from "@/app/actions/get";
+import {
+  getRenewalLogs,
+  RenewalLogRecord,
+  getAllRenewalLogsForExport,
+} from "@/app/actions/get";
 
 export default function RenewalLogsPage() {
   const [data, setData] = useState<RenewalLogRecord[]>([]);
@@ -44,62 +52,124 @@ export default function RenewalLogsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [totalCount, setTotalCount] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [isAutoFilter, setIsAutoFilter] = useState<string>("ALL");
+  const [exportLoading, setExportLoading] = useState(false);
+  const [sortStatus, setSortStatus] = useState<
+    DataTableSortStatus<RenewalLogRecord>
+  >({
+    columnAccessor: "renewal_created_at",
+    direction: "desc",
+  });
 
   const fetchData = async () => {
     setLoading(true);
-    const result = await getRenewalLogs(page, 10, search);
+    const result = await getRenewalLogs(
+      page,
+      10,
+      search,
+      statusFilter || undefined,
+      typeFilter || undefined,
+      isAutoFilter === "ALL" ? undefined : isAutoFilter === "AUTO",
+      sortStatus.columnAccessor,
+      sortStatus.direction.toUpperCase() as "ASC" | "DESC",
+    );
     setData(result.data);
     setStats(result.stats);
     setTotalCount(result.total_count);
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [page]);
-
-  const handleSearch = () => {
+  const handleResetFilters = () => {
+    setStatusFilter(null);
+    setTypeFilter(null);
+    setIsAutoFilter("ALL");
+    setSearch("");
+    setSearchQuery("");
     setPage(1);
-    fetchData();
+    setSortStatus({
+      columnAccessor: "renewal_created_at",
+      direction: "desc",
+    });
+  };
+  const handleSearch = () => {
+    setSearch(searchQuery);
+    setPage(1);
   };
 
-  const breadcrumbs = [
-    { title: "LEDGER", href: "/" },
-    { title: "HISTORY", href: "/renewals" },
-  ].map((item, index) => (
-    <Anchor
-      href={item.href}
-      key={index}
-      size="xs"
-      fw={700}
-      c="dimmed"
-      style={{ letterSpacing: 1 }}
-    >
-      {item.title}
-    </Anchor>
-  ));
+  const handleExportCSV = async () => {
+    setExportLoading(true);
+    try {
+      const recordsToExport = await getAllRenewalLogsForExport();
+
+      // Define headers
+      const headers = [
+        "Employee Name",
+        "Role",
+        "Contract Type",
+        "Previous Expiry",
+        "New Expiry",
+        "Renewed By",
+        "Auto Renewed",
+        "Status",
+      ];
+
+      // Map data to rows
+      const rows = recordsToExport.map((r) => [
+        `"${r.employee_first_name} ${r.employee_last_name}"`,
+        `"${r.employee_role}"`,
+        `"${r.contract_type}"`,
+        r.renewal_previous_expiry,
+        r.renewal_new_expiry,
+        r.renewal_is_auto
+          ? "System"
+          : `"${r.manager_first_name} ${r.manager_last_name}"`,
+        r.renewal_is_auto ? "Yes" : "No",
+        r.contract_renewal_status,
+      ]);
+
+      // Combine into CSV string
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.join(",")),
+      ].join("\n");
+
+      // Create download link
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `renewal_logs_export_${dayjs().format("YYYY-MM-DD")}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [page, search, statusFilter, typeFilter, isAutoFilter, sortStatus]);
 
   return (
     <DashboardShell>
       <Stack gap="xl">
         <Stack gap={0}>
-          <Breadcrumbs
-            separator={<IconChevronRight size={12} stroke={3} color="gray.4" />}
-            mb="xs"
-          >
-            {breadcrumbs}
-          </Breadcrumbs>
           <Group justify="space-between" align="center">
             <Box>
-              <Title
-                order={1}
-                fw={800}
-                style={{ fontSize: "2.5rem", letterSpacing: -1.5 }}
-              >
+              <Title order={2} fw={800} style={{ letterSpacing: -1.5 }}>
                 Renewal Logs
               </Title>
-              <Text c="dimmed" size="md">
+              <Text c="gray.8" size="sm" mt={4}>
                 Track and review past contract renewals across the organization.
               </Text>
             </Box>
@@ -236,24 +306,136 @@ export default function RenewalLogsPage() {
               </Box>
               <Group>
                 <TextInput
-                  placeholder="Search logs, employees..."
+                  placeholder="Search employees or managers..."
                   size="sm"
                   radius="md"
                   w={280}
                   leftSection={<IconSearch size={16} />}
-                  value={search}
-                  onChange={(e) => setSearch(e.currentTarget.value)}
+                  rightSection={
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      onClick={handleSearch}
+                    >
+                      <IconChevronRight size={16} />
+                    </ActionIcon>
+                  }
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.currentTarget.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 />
-                <Button
-                  variant="light"
-                  color="gray"
-                  radius="md"
-                  leftSection={<IconFilter size={16} />}
+                <Popover
+                  width={300}
+                  position="bottom-end"
+                  shadow="md"
+                  withArrow
                 >
-                  Filter
-                </Button>
-                <Button radius="md" leftSection={<IconDownload size={16} />}>
+                  <Popover.Target>
+                    <Button
+                      variant="light"
+                      color={
+                        statusFilter || typeFilter || isAutoFilter !== "ALL"
+                          ? "blue"
+                          : "gray"
+                      }
+                      radius="md"
+                      leftSection={<IconFilter size={16} />}
+                    >
+                      Filter
+                    </Button>
+                  </Popover.Target>
+                  <Popover.Dropdown p="md">
+                    <Stack gap="md">
+                      <Group justify="space-between">
+                        <Text size="xs" fw={700} c="dimmed">
+                          FILTER LOGS
+                        </Text>
+                        <Button
+                          variant="subtle"
+                          size="compact-xs"
+                          color="red"
+                          leftSection={<IconFilterX size={12} />}
+                          onClick={handleResetFilters}
+                        >
+                          Reset
+                        </Button>
+                      </Group>
+                      <Divider />
+                      <Select
+                        label="Renewal Status"
+                        placeholder="All Statuses"
+                        data={[
+                          { label: "Completed", value: "RENEWED" },
+                          { label: "Pending", value: "PENDING" },
+                          { label: "Escalated", value: "ESCALATED" },
+                          { label: "Terminated", value: "TERMINATED" },
+                        ]}
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        clearable
+                        size="sm"
+                      />
+                      <Select
+                        label="Contract Type"
+                        placeholder="All Types"
+                        data={[
+                          { label: "Full Time", value: "FULL_TIME" },
+                          { label: "Part Time", value: "PART_TIME" },
+                          { label: "Contractor", value: "CONTRACTOR" },
+                          {
+                            label: "Probationary",
+                            value: "PROBATIONARY",
+                          },
+                        ]}
+                        value={typeFilter}
+                        onChange={setTypeFilter}
+                        clearable
+                        size="sm"
+                      />
+                      <Box>
+                        <Text size="sm" fw={500} mb={4}>
+                          Renewed By
+                        </Text>
+                        <Group gap={8}>
+                          <Button
+                            size="compact-xs"
+                            variant={
+                              isAutoFilter === "ALL" ? "filled" : "light"
+                            }
+                            color="gray"
+                            onClick={() => setIsAutoFilter("ALL")}
+                          >
+                            All
+                          </Button>
+                          <Button
+                            size="compact-xs"
+                            variant={
+                              isAutoFilter === "AUTO" ? "filled" : "light"
+                            }
+                            onClick={() => setIsAutoFilter("AUTO")}
+                          >
+                            System (Auto)
+                          </Button>
+                          <Button
+                            size="compact-xs"
+                            variant={
+                              isAutoFilter === "MANUAL" ? "filled" : "light"
+                            }
+                            onClick={() => setIsAutoFilter("MANUAL")}
+                          >
+                            Manager
+                          </Button>
+                        </Group>
+                      </Box>
+                    </Stack>
+                  </Popover.Dropdown>
+                </Popover>
+                <Button
+                  radius="md"
+                  leftSection={<IconDownload size={16} />}
+                  onClick={handleExportCSV}
+                  loading={exportLoading}
+                >
                   Export CSV
                 </Button>
               </Group>
@@ -269,26 +451,29 @@ export default function RenewalLogsPage() {
             recordsPerPage={10}
             page={page}
             onPageChange={setPage}
+            sortStatus={sortStatus}
+            onSortStatusChange={setSortStatus}
+            minHeight={150}
             columns={[
               {
                 accessor: "employee",
                 title: "EMPLOYEE",
+                sortable: true,
                 render: (record) => (
                   <Group gap="sm">
                     <Avatar
                       src={record.employee_avatar_url}
                       radius="xl"
                       color="blue"
-                      size="md"
                     >
                       {record.employee_first_name[0]}
                       {record.employee_last_name[0]}
                     </Avatar>
                     <Box>
-                      <Text size="sm" fw={800}>
+                      <Text size="sm" fw={700}>
                         {record.employee_first_name} {record.employee_last_name}
                       </Text>
-                      <Text size="xs" c="dimmed">
+                      <Text size="xs" c="gray.7">
                         {record.employee_role}
                       </Text>
                     </Box>
@@ -297,23 +482,27 @@ export default function RenewalLogsPage() {
               },
               {
                 accessor: "contract_type",
-                title: "CONTRACT TYPE",
+                title: "TYPE",
+                sortable: true,
                 render: (record) => (
                   <Box>
-                    <Text size="sm" fw={600}>
+                    <Text
+                      size="xs"
+                      fw={700}
+                      c="gray.7"
+                      style={{ letterSpacing: 0.5 }}
+                    >
                       {record.contract_type.replace("_", " ")}
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      (Indefinite)
                     </Text>
                   </Box>
                 ),
               },
               {
                 accessor: "renewal_previous_expiry",
-                title: "PREVIOUS EXPIRY",
+                title: "PREV. EXPIRY",
+                sortable: true,
                 render: (record) => (
-                  <Text size="sm" c="dimmed" fw={500}>
+                  <Text size="sm" c="gray.6" fw={500}>
                     {dayjs(record.renewal_previous_expiry).format(
                       "MMM DD, YYYY",
                     )}
@@ -323,64 +512,85 @@ export default function RenewalLogsPage() {
               {
                 accessor: "renewal_new_expiry",
                 title: "NEW EXPIRY",
+                sortable: true,
+                render: (record) => {
+                  const daysLeft = dayjs(record.renewal_new_expiry).diff(
+                    dayjs(),
+                    "day",
+                  );
+                  return (
+                    <div>
+                      <Text size="sm" fw={700}>
+                        {dayjs(record.renewal_new_expiry).format(
+                          "MMM DD, YYYY",
+                        )}
+                      </Text>
+                      <Text
+                        size="xs"
+                        fw={700}
+                        c={
+                          daysLeft < 30
+                            ? "red"
+                            : daysLeft < 60
+                              ? "orange"
+                              : "green"
+                        }
+                      >
+                        {daysLeft} DAYS LEFT
+                      </Text>
+                    </div>
+                  );
+                },
+              },
+              {
+                accessor: "manager",
+                title: "RENEWED BY",
                 render: (record) => (
                   <Box>
-                    <Text size="sm" fw={800} c="blue.7">
-                      {dayjs(record.renewal_new_expiry).format("MMM DD, YYYY")}
+                    <Text size="sm" fw={600}>
+                      {record.renewal_is_auto
+                        ? "System (Auto)"
+                        : `${record.manager_first_name} ${record.manager_last_name}`}
                     </Text>
                     <Text size="xs" c="dimmed">
-                      {dayjs(record.renewal_new_expiry).diff(
-                        record.renewal_previous_expiry,
-                        "month",
-                      )}{" "}
-                      Months ext.
+                      {dayjs(record.renewal_created_at).format("MMM DD, HH:mm")}
                     </Text>
                   </Box>
                 ),
               },
               {
-                accessor: "renewed_by",
-                title: "RENEWED BY",
-                render: (record) => (
-                  <Text size="sm" fw={600}>
-                    {record.renewal_is_auto
-                      ? "System (Auto)"
-                      : `${record.manager_first_name} ${record.manager_last_name}`}
-                  </Text>
-                ),
-              },
-              {
-                accessor: "status",
+                accessor: "contract_renewal_status",
                 title: "STATUS",
-                render: (record) => (
-                  <Badge
-                    variant="light"
-                    color={
-                      record.contract_renewal_status === "RENEWED"
-                        ? "blue"
-                        : "orange"
-                    }
-                    size="sm"
-                    radius="sm"
-                    fw={700}
-                  >
-                    {record.contract_renewal_status === "RENEWED"
-                      ? "COMPLETED"
-                      : "PENDING"}
-                  </Badge>
-                ),
+                sortable: true,
+                render: (record) => {
+                  const status = record.contract_renewal_status || "PENDING";
+                  const colors: Record<string, string> = {
+                    RENEWED: "green",
+                    PENDING: "orange",
+                    TERMINATED: "red",
+                    ESCALATED: "red",
+                  };
+                  return (
+                    <Badge
+                      variant="light"
+                      color={colors[status] || "gray"}
+                      size="sm"
+                      fw={700}
+                    >
+                      {status}
+                    </Badge>
+                  );
+                },
               },
             ]}
             styles={{
               header: {
-                backgroundColor: "var(--mantine-color-gray-0)",
-                textTransform: "uppercase",
+                background: "transparent",
+                borderBottom: "1px solid var(--mantine-color-gray-2)",
                 fontSize: "10px",
-                letterSpacing: "1px",
                 fontWeight: 800,
                 color: "var(--mantine-color-gray-7)",
-                paddingTop: "16px",
-                paddingBottom: "16px",
+                letterSpacing: "1px",
               },
             }}
           />
