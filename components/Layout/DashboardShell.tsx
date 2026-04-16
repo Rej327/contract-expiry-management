@@ -24,8 +24,8 @@ const sidebarData = [
   {
     label: 'MAIN MENU',
     links: [
-      { label: 'Dashboard', icon: IconLayoutDashboard, link: '/dashboard' },
-      { label: 'Contracts', icon: IconFileCertificate, link: '/' },
+      { label: 'Dashboard', icon: IconLayoutDashboard, link: '/' },
+      { label: 'Contracts', icon: IconFileCertificate, link: '/contracts' },
       { label: 'Employees', icon: IconUsers, link: '/employees' },
     ]
   },
