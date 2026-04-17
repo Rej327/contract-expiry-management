@@ -251,7 +251,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Box maw={1200} mx="auto">
+        <Box maw={1200} mx="auto" className="page-fade-in">
           {children}
         </Box>
       </AppShell.Main>

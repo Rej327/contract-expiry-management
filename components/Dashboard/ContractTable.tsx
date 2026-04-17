@@ -66,6 +66,7 @@ interface ContractTableProps {
   onNotify: (records: ContractRecord[]) => void;
   sortStatus: DataTableSortStatus<ContractRecord>;
   onSortStatusChange: (status: DataTableSortStatus<ContractRecord>) => void;
+  loading?: boolean;
 }
 
 export function ContractTable({
@@ -80,6 +81,7 @@ export function ContractTable({
   onNotify,
   sortStatus,
   onSortStatusChange,
+  loading,
 }: ContractTableProps) {
   const router = useRouter();
   const [selectedRecords, setSelectedRecords] = useState<ContractRecord[]>([]);
@@ -210,6 +212,7 @@ export function ContractTable({
       </Box>
 
       <DataTable
+        fetching={loading}
         idAccessor="contract_id"
         withTableBorder={false}
         borderRadius="md"

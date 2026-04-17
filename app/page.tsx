@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Stack, Title, Text, Box, Group, Button, Paper, ThemeIcon, SimpleGrid, Badge } from '@mantine/core';
+import { Stack, Title, Text, Box, Group, Button, Paper, ThemeIcon, SimpleGrid, Badge, Skeleton } from '@mantine/core';
 import { IconPlus, IconArrowRight, IconBell, IconFileCertificate } from '@tabler/icons-react';
 import Link from 'next/link';
 import { DashboardShell } from '@/components/Layout/DashboardShell';
@@ -73,6 +73,7 @@ export default function DashboardSummaryPage() {
           total={stats.total_contracts} 
           expiringSoon={stats.expiring_soon_count} 
           expired={stats.expired_count} 
+          loading={loading}
         />
 
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
@@ -89,8 +90,27 @@ export default function DashboardSummaryPage() {
 
             <Paper withBorder radius="md">
               <Stack gap={0}>
-                {upcomingExpirations.length > 0 ? (
+                {loading ? (
+                  Array(5).fill(0).map((_, i) => (
+                    <Box key={i} p="md" style={{ borderBottom: i === 4 ? 'none' : '1px solid var(--mantine-color-gray-2)' }}>
+                      <Group justify="space-between">
+                        <Group>
+                          <Skeleton height={32} circle />
+                          <Box>
+                            <Skeleton height={14} width={120} mb={6} />
+                            <Skeleton height={10} width={80} />
+                          </Box>
+                        </Group>
+                        <Box>
+                          <Skeleton height={14} width={60} mb={6} />
+                          <Skeleton height={10} width={40} />
+                        </Box>
+                      </Group>
+                    </Box>
+                  ))
+                ) : upcomingExpirations.length > 0 ? (
                   upcomingExpirations.map((contract, index) => (
+                    // ... existing mapping
                     <Box 
                       component={Link}
                       href={`/contracts/${contract.contract_id}`}
@@ -155,7 +175,7 @@ export default function DashboardSummaryPage() {
 
           <Stack gap="lg">
             <Title order={4}>Recent Activity</Title>
-            <RecentActions activities={recentActions} />
+            <RecentActions activities={recentActions} loading={loading} />
           </Stack>
         </SimpleGrid>
       </Stack>

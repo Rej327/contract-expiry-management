@@ -8,6 +8,7 @@ import {
   Title,
   Box,
   ThemeIcon,
+  Skeleton,
 } from "@mantine/core";
 import {
   IconAlertTriangle,
@@ -21,9 +22,10 @@ interface StatsProps {
   total: number;
   expiringSoon: number;
   expired: number;
+  loading?: boolean;
 }
 
-export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
+export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps) {
   const stats = [
     {
       title: "TOTAL CONTRACTS",
@@ -85,27 +87,36 @@ export function StatsCards({ total, expiringSoon, expired }: StatsProps) {
               >
                 {stat.title}
               </Text>
-              <Title
-                order={1}
-                fw={900}
-                mt={4}
-                style={{ fontSize: "2.2rem", letterSpacing: -1 }}
-              >
-                {stat.value}
-              </Title>
-              <Group gap={4} mt="xs">
-                {stat.indicator && (
-                  <>
-                    <stat.indicator.icon
-                      size={14}
-                      color={`var(--mantine-color-${stat.indicator.color.split(".")[0]}-${stat.indicator.color.split(".")[1] || "6"})`}
-                    />
-                    <Text size="xs" fw={700} c={stat.indicator.color}>
-                      {stat.indicator.text}
-                    </Text>
-                  </>
-                )}
-              </Group>
+              {loading ? (
+                <>
+                  <Skeleton height={42} width="60%" mt={4} />
+                  <Skeleton height={14} width="80%" mt="xs" />
+                </>
+              ) : (
+                <>
+                  <Title
+                    order={1}
+                    fw={900}
+                    mt={4}
+                    style={{ fontSize: "2.2rem", letterSpacing: -1 }}
+                  >
+                    {stat.value}
+                  </Title>
+                  <Group gap={4} mt="xs">
+                    {stat.indicator && (
+                      <>
+                        <stat.indicator.icon
+                          size={14}
+                          color={`var(--mantine-color-${stat.indicator.color.split(".")[0]}-${stat.indicator.color.split(".")[1] || "6"})`}
+                        />
+                        <Text size="xs" fw={700} c={stat.indicator.color}>
+                          {stat.indicator.text}
+                        </Text>
+                      </>
+                    )}
+                  </Group>
+                </>
+              )}
             </Box>
             <ThemeIcon size={48} radius="md" variant="light" color={stat.color}>
               <stat.icon style={{ width: "24px", height: "24px" }} stroke={2} />

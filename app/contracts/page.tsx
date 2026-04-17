@@ -257,6 +257,7 @@ export default function ContractsPage() {
           total={stats.total_contracts}
           expiringSoon={stats.expiring_soon_count}
           expired={stats.expired_count}
+          loading={loading}
         />
 
         <ContractTable
@@ -280,6 +281,7 @@ export default function ContractsPage() {
           onNotify={handleBulkNotify}
           sortStatus={sortStatus}
           onSortStatusChange={setSortStatus}
+          loading={loading}
         />
 
         <Modal
@@ -517,7 +519,7 @@ export default function ContractsPage() {
           </Center>
         </Modal>
 
-        <RecentActions activities={actions} />
+        <RecentActions activities={actions} loading={loading} />
       </Stack>
     </DashboardShell>
   );

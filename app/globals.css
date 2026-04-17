@@ -10,4 +10,25 @@ body {
   background-color: var(--mantine-color-body);
   color: var(--mantine-color-text);
   font-family: var(--mantine-font-family);
+  transition: background-color 0.3s ease;
+}
+
+/* Base transitions for all elements */
+* {
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+/* Page transition animation */
+.page-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Optimization for TopLoader */
+#nprogress .bar {
+  z-index: 10001 !important;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Paper, Group, Text, Avatar, Stack, Box, ThemeIcon, Title } from '@mantine/core';
+import { Paper, Group, Text, Avatar, Stack, Box, ThemeIcon, Title, Skeleton } from '@mantine/core';
 import { IconRepeat, IconBell, IconUserPlus, IconFileCertificate, IconClock } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -9,7 +9,7 @@ dayjs.extend(relativeTime);
 
 import { ActivityRecord } from '@/types/types';
 
-export function RecentActions({ activities }: { activities: ActivityRecord[] }) {
+export function RecentActions({ activities, loading }: { activities: ActivityRecord[], loading?: boolean }) {
   const getIcon = (action: string) => {
     switch (action) {
       case 'CONTRACT_RENEWED':
@@ -25,7 +25,19 @@ export function RecentActions({ activities }: { activities: ActivityRecord[] }) 
 
   return (
     <Stack gap="md">
-      {activities.length > 0 ? (
+      {loading ? (
+        Array(4).fill(0).map((_, i) => (
+          <Paper key={i} p="md" radius="md" withBorder>
+            <Group wrap="nowrap">
+              <Skeleton height={40} width={40} radius="xl" />
+              <Box style={{ flex: 1 }}>
+                <Skeleton height={14} width="90%" mb={8} />
+                <Skeleton height={10} width="40%" />
+              </Box>
+            </Group>
+          </Paper>
+        ))
+      ) : activities.length > 0 ? (
         activities.map((activity) => {
           const { icon: ActionIcon, color } = getIcon(activity.activity_action);
           return (
