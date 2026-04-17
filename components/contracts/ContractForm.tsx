@@ -327,10 +327,17 @@ export function ContractForm({
             color="gray"
             onClick={onCancel}
             disabled={isSubmitLoading}
+            data-testid="btn-discard-contract"
           >
             Discard Changes
           </Button>
-          <Button type="submit" loading={isSubmitLoading} px="xl" radius="md">
+          <Button
+            type="submit"
+            loading={isSubmitLoading}
+            px="xl"
+            radius="md"
+            data-testid="btn-submit-contract"
+          >
             {isUpdate ? "Save Changes" : "Create Contract"}
           </Button>
         </Group>

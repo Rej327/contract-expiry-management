@@ -247,6 +247,7 @@ export default function ContractsPage() {
             radius="md"
             size="md"
             onClick={openCreate}
+            data-testid="btn-open-create-modal"
           >
             Create Contract
           </Button>

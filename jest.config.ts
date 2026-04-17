@@ -15,6 +15,17 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
+  // Only run Jest unit/integration tests (not Playwright e2e tests)
+  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/tests/e2e/'],
+  // Coverage collection configuration
+  collectCoverageFrom: [
+    'lib/**/*.ts',
+    'app/actions/**/*.ts',
+    'components/**/*.tsx',
+    '!**/*.d.ts',
+    '!**/node_modules/**',
+  ],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
