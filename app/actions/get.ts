@@ -196,3 +196,25 @@ export async function getAllRenewalLogsForExport(): Promise<RenewalLogRecord[]> 
   const result = data as unknown as RenewalLogsResponse;
   return result.data;
 }
+
+export interface ReportsData {
+  expirations_by_month: { name: string; count: number }[];
+  type_distribution: { name: string; value: number }[];
+  salary_stats: {
+    avg: number;
+    min: number;
+    max: number;
+    total: number;
+  };
+  manager_workload: { name: string; value: number }[];
+  status_summary: { name: string; value: number }[];
+}
+
+export async function getReportsData(): Promise<ReportsData | null> {
+  const { data, error } = await supabase.rpc("get_reports_data");
+  if (error) {
+    console.error("Error fetching reports data:", error);
+    return null;
+  }
+  return data as unknown as ReportsData;
+}

@@ -235,7 +235,7 @@ export function ContractForm({
           />
           <NumberInput
             label="Base Salary (Annual)"
-            prefix="$ "
+            prefix="₱ "
             thousandSeparator=","
             {...form.getInputProps("contract_salary")}
             min={0}
