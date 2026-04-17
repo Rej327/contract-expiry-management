@@ -71,10 +71,10 @@ export async function createContract(contractData: ContractFormValues): Promise<
   const { data, error } = await supabase.rpc("create_contract", {
     input_data: {
       ...contractData,
-      contract_issued_date: contractData.contract_issued_date?.toISOString(),
-      contract_start_date: contractData.contract_start_date?.toISOString(),
-      contract_expiry_date: contractData.contract_expiry_date?.toISOString(),
-      contract_signed_date: contractData.contract_signed_date?.toISOString(),
+      contract_issued_date: contractData.contract_issued_date ? new Date(contractData.contract_issued_date).toISOString() : null,
+      contract_start_date: contractData.contract_start_date ? new Date(contractData.contract_start_date).toISOString() : null,
+      contract_expiry_date: contractData.contract_expiry_date ? new Date(contractData.contract_expiry_date).toISOString() : null,
+      contract_signed_date: contractData.contract_signed_date ? new Date(contractData.contract_signed_date).toISOString() : null,
     } as any,
   });
 
