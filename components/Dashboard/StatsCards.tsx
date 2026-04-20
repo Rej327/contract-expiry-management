@@ -9,6 +9,7 @@ import {
   Box,
   ThemeIcon,
   Skeleton,
+  useMantineColorScheme,
 } from "@mantine/core";
 import {
   IconAlertTriangle,
@@ -26,6 +27,7 @@ interface StatsProps {
 }
 
 export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps) {
+  const { colorScheme } = useMantineColorScheme();
   const stats = [
     {
       title: "TOTAL CONTRACTS",
@@ -35,7 +37,7 @@ export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps
       indicator: {
         icon: IconTrendingUp,
         text: "Across organization",
-        color: "blue.6",
+        color: "blue.9",
       },
     },
     {
@@ -46,7 +48,7 @@ export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps
       indicator: {
         icon: IconAlertTriangle,
         text: "Action required",
-        color: "orange.6",
+        color: "orange.9",
       },
     },
     {
@@ -57,7 +59,7 @@ export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps
       indicator: {
         icon: expired > 0 ? IconAlertTriangle : IconCheck,
         text: expired > 0 ? "Immediate attention" : "No active expirations",
-        color: expired > 0 ? "red.6" : "teal.6",
+        color: expired > 0 ? "red.9" : "teal.9",
       },
     },
   ];
@@ -72,7 +74,7 @@ export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps
           withBorder
           shadow="sm"
           style={{
-            borderTop: `4px solid var(--mantine-color-${stat.color}-6)`,
+            borderTop: `4px solid var(--mantine-color-${stat.color}-${colorScheme === "dark" ? "4" : "9"})`,
             transition: "transform 0.2s ease, box-shadow 0.2s ease",
           }}
           className="stats-card-hover"
@@ -82,7 +84,7 @@ export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps
               <Text
                 size="xs"
                 fw={700}
-                c="dimmed"
+                c={colorScheme === "dark" ? "gray.4" : "gray.8"}
                 style={{ letterSpacing: 0.5, textTransform: "uppercase" }}
               >
                 {stat.title}
@@ -94,20 +96,22 @@ export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps
                 </>
               ) : (
                 <>
-                  <Title
-                    order={1}
-                    fw={900}
-                    mt={4}
-                    style={{ fontSize: "2.2rem", letterSpacing: -1 }}
-                  >
-                    {stat.value}
-                  </Title>
+                    <Title
+                      order={1}
+                      fw={900}
+                      mt={4}
+                        c={colorScheme === "dark" ? "white" : "black"}
+                        style={{ fontSize: "2.2rem", letterSpacing: -1 }}
+                      >
+                        {stat.value}
+                      </Title>
                   <Group gap={4} mt="xs">
                     {stat.indicator && (
                       <>
                         <stat.indicator.icon
                           size={14}
-                          color={`var(--mantine-color-${stat.indicator.color.split(".")[0]}-${stat.indicator.color.split(".")[1] || "6"})`}
+                          aria-hidden="true"
+                          color={`var(--mantine-color-${stat.indicator.color.split(".")[0]}-${stat.indicator.color.split(".")[1]})`}
                         />
                         <Text size="xs" fw={700} c={stat.indicator.color}>
                           {stat.indicator.text}
@@ -118,8 +122,8 @@ export function StatsCards({ total, expiringSoon, expired, loading }: StatsProps
                 </>
               )}
             </Box>
-            <ThemeIcon size={48} radius="md" variant="light" color={stat.color}>
-              <stat.icon style={{ width: "24px", height: "24px" }} stroke={2} />
+            <ThemeIcon size={48} radius="md" variant="filled" color={`${stat.color}.8`} aria-hidden="true">
+              <stat.icon style={{ width: "24px", height: "24px" }} stroke={2} aria-hidden="true" />
             </ThemeIcon>
           </Group>
         </Paper>

@@ -84,10 +84,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               onClick={toggle}
               hiddenFrom="sm"
               size="sm"
+              aria-label="Toggle navigation"
             />
             <Group gap={8}>
               <Box bg="blue" p={6} style={{ borderRadius: 8 }}>
-                <IconFileCertificate size={24} color="white" />
+                <IconFileCertificate
+                  size={24}
+                  color="white"
+                  aria-hidden="true"
+                />
               </Box>
               <Title order={3} fw={800} style={{ letterSpacing: -0.5 }}>
                 Formsly
@@ -107,27 +112,36 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 border: `1px solid var(--mantine-color-${colorScheme === "dark" ? "dark.2" : "gray-2"})`,
               }}
             >
-              <IconPointFilled size={12} color="var(--mantine-color-green-6)" />
+              <IconPointFilled
+                size={12}
+                color="var(--mantine-color-green-6)"
+                aria-hidden="true"
+              />
               <Text
                 size="xs"
                 fw={600}
-                c={colorScheme === "dark" ? "gray.2" : "gray.7"}
+                c={colorScheme === "dark" ? "gray.2" : "gray.8"}
               >
-                System Online
+                Across Organization
               </Text>
             </Group>
 
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
-                <Avatar
-                  radius="xl"
-                  color="blue"
-                  src={null}
-                  alt="JD"
-                  style={{ cursor: "pointer" }}
+                <UnstyledButton
+                  aria-label="User menu"
+                  style={{ borderRadius: "100%" }}
                 >
-                  JD
-                </Avatar>
+                  <Avatar
+                    radius="xl"
+                    color="blue"
+                    src={null}
+                    alt="JD"
+                    style={{ cursor: "pointer" }}
+                  >
+                    JD
+                  </Avatar>
+                </UnstyledButton>
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Label>Application</Menu.Label>
@@ -161,7 +175,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <Text
                   size="xs"
                   fw={700}
-                  c="gray.7"
+                  c={colorScheme === "dark" ? "gray.5" : "gray.8"}
                   mb={8}
                   px="sm"
                   style={{ letterSpacing: 0.5 }}
@@ -174,8 +188,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     component={Link}
                     href={link.link}
                     label={link.label}
-                    leftSection={<link.icon size={18} stroke={1.5} />}
+                    leftSection={
+                      <link.icon size={18} stroke={1.5} aria-hidden="true" />
+                    }
                     active={pathname === link.link}
+                    aria-current={pathname === link.link ? "page" : undefined}
                     variant="filled"
                     styles={(theme) => ({
                       root: {
@@ -186,13 +203,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                           pathname === link.link
                             ? colorScheme === "dark"
                               ? theme.colors.blue[9]
-                              : theme.colors.blue[0]
+                              : theme.colors.blue[1]
                             : undefined,
                         color:
                           pathname === link.link
                             ? colorScheme === "dark"
                               ? theme.colors.blue[0]
-                              : theme.colors.blue[7]
+                              : theme.colors.blue[9]
                             : undefined,
                       },
                     })}
@@ -212,6 +229,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           >
             <UnstyledButton
               onClick={() => toggleColorScheme()}
+              aria-label="Toggle color scheme"
               mb="md"
               w="100%"
               px="sm"
@@ -221,31 +239,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Group justify="space-between">
                 <Group gap="sm">
                   {colorScheme === "dark" ? (
-                    <IconSun size={18} stroke={1.5} />
+                    <IconSun size={18} stroke={1.5} aria-hidden="true" />
                   ) : (
-                    <IconMoon size={18} stroke={1.5} />
+                    <IconMoon size={18} stroke={1.5} aria-hidden="true" />
                   )}
                   <Text size="sm">Theme Toggle</Text>
                 </Group>
               </Group>
             </UnstyledButton>
-
-            <Group px="sm" py="md">
-              <Avatar radius="xl" color="green">
-                JD
-              </Avatar>
-              <Box style={{ flex: 1 }}>
-                <Text size="sm" fw={600}>
-                  Jane Doe
-                </Text>
-                <Text size="xs" c="gray.7">
-                  HR Admin
-                </Text>
-              </Box>
-              <ActionIcon variant="subtle" color="gray">
-                <IconSettings size={16} stroke={1.5} />
-              </ActionIcon>
-            </Group>
           </Box>
         </AppShell.Section>
       </AppShell.Navbar>

@@ -2,7 +2,18 @@
 
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { Stack, Title, Text, Box, Modal, Button, Group, Loader, Center } from "@mantine/core";
+import {
+  Stack,
+  Title,
+  Text,
+  Box,
+  Modal,
+  Button,
+  Group,
+  Loader,
+  Center,
+  useMantineColorScheme,
+} from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -17,7 +28,11 @@ import {
   getContractList,
   getRecentActivityLogs,
 } from "@/app/actions/get";
-import { createContract, sendBulkContractNotifications, notifyContract } from "@/app/actions/post";
+import {
+  createContract,
+  sendBulkContractNotifications,
+  notifyContract,
+} from "@/app/actions/post";
 import { updateContract, renewContract } from "@/app/actions/update";
 import { deleteContract } from "@/app/actions/delete";
 import { ContractForm } from "@/components/contracts/ContractForm";
@@ -25,6 +40,7 @@ import { ContractRecord } from "@/components/Dashboard/ContractTable";
 import { ActivityRecord } from "@/types/types";
 
 export default function ContractsPage() {
+  const { colorScheme } = useMantineColorScheme();
   const [stats, setStats] = useState({
     total_contracts: 0,
     expiring_soon_count: 0,
@@ -58,7 +74,10 @@ export default function ContractsPage() {
     useState<ContractRecord | null>(null);
   const [notifyBatchCount, setNotifyBatchCount] = useState(0);
   const [currentNotifyIndex, setCurrentNotifyIndex] = useState(0);
-  const [notifyLoadingOpened, { open: openNotifyLoading, close: closeNotifyLoading }] = useDisclosure(false);
+  const [
+    notifyLoadingOpened,
+    { open: openNotifyLoading, close: closeNotifyLoading },
+  ] = useDisclosure(false);
 
   const fetchStats = async () => {
     const data = await getDashboardStats();
@@ -182,7 +201,7 @@ export default function ContractsPage() {
     setNotifyBatchCount(records.length);
     setCurrentNotifyIndex(0);
     openNotifyLoading();
-    
+
     let successCount = 0;
     try {
       for (let i = 0; i < records.length; i++) {
@@ -235,10 +254,14 @@ export default function ContractsPage() {
       <Stack gap="xl">
         <Group justify="space-between" align="flex-end">
           <Box>
-            <Title order={2} fw={800} style={{ letterSpacing: -0.5 }}>
+            <Title order={1} fw={800} style={{ letterSpacing: -1.5 }}>
               All Contracts
             </Title>
-            <Text c="dimmed" size="sm" mt={4}>
+            <Text
+              c={colorScheme === "dark" ? "gray.4" : "gray.8"}
+              size="sm"
+              mt={4}
+            >
               Review and manage upcoming employee contract expirations.
             </Text>
           </Box>
@@ -403,7 +426,7 @@ export default function ContractsPage() {
               </Text>
               <Group mt="md" gap="xl">
                 <div>
-                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+                  <Text size="xs" c="gray.7" fw={700} tt="uppercase">
                     Current Expiry
                   </Text>
                   <Text size="sm" fw={700}>
@@ -415,7 +438,7 @@ export default function ContractsPage() {
                   </Text>
                 </div>
                 <div>
-                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+                  <Text size="xs" c="gray.7" fw={700} tt="uppercase">
                     Action
                   </Text>
                   <Text size="sm" fw={700} c="blue.7">
@@ -495,7 +518,7 @@ export default function ContractsPage() {
                 <Text fw={800} size="lg" mb={4}>
                   Sending Notifications
                 </Text>
-                <Text c="dimmed" size="sm">
+                <Text c="gray.7" size="sm">
                   Processing{" "}
                   <Text span fw={800} c="blue">
                     {currentNotifyIndex}
@@ -507,12 +530,7 @@ export default function ContractsPage() {
                   employee blasts...
                 </Text>
                 <Box mt="md" w="100%">
-                  <Loader
-                    size="xs"
-                    w="100%"
-                    type="dots"
-                    color="blue"
-                  />
+                  <Loader size="xs" w="100%" type="dots" color="blue" />
                 </Box>
               </Box>
             </Stack>

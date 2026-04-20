@@ -12,6 +12,7 @@ import {
   ThemeIcon,
   Loader,
   Center,
+  useMantineColorScheme,
 } from "@mantine/core";
 import {
   IconChartBar,
@@ -49,6 +50,7 @@ const COLORS = [
 ];
 
 export default function ReportsPage() {
+  const { colorScheme } = useMantineColorScheme();
   const [data, setData] = useState<ReportsData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +69,7 @@ export default function ReportsPage() {
         <Center style={{ height: "60vh" }}>
           <Stack align="center">
             <Loader size="xl" variant="bars" />
-            <Text fw={600} c="dimmed">
+            <Text fw={600} c="gray.7">
               Gathering analytics...
             </Text>
           </Stack>
@@ -93,7 +95,7 @@ export default function ReportsPage() {
           <Title order={1} fw={900} style={{ letterSpacing: -1 }}>
             Analytics & Reports
           </Title>
-          <Text c="dimmed" size="sm">
+          <Text c={colorScheme === 'dark' ? 'gray.4' : 'gray.8'} size="sm">
             Visual insights into contract distribution, financial commitments,
             and operational trends.
           </Text>
@@ -103,60 +105,60 @@ export default function ReportsPage() {
           <Paper p="md" radius="md" withBorder shadow="xs">
             <Group justify="space-between">
               <Box>
-                <Text size="xs" fw={700} c="dimmed">
+                <Text size="xs" fw={700} c={colorScheme === 'dark' ? 'gray.4' : 'gray.8'}>
                   AVG SALARY
                 </Text>
-                <Title order={3} fw={900}>
+                <Title order={3} fw={900} c={colorScheme === 'dark' ? 'white' : 'black'}>
                   ₱{(data.salary_stats.avg || 0).toLocaleString()}
                 </Title>
               </Box>
-              <ThemeIcon color="green" variant="light" size="lg">
-                <IconCurrencyDollar size={20} />
+              <ThemeIcon color="green" variant="filled" size="lg" aria-hidden="true">
+                <IconCurrencyDollar size={20} aria-hidden="true" />
               </ThemeIcon>
             </Group>
           </Paper>
           <Paper p="md" radius="md" withBorder shadow="xs">
             <Group justify="space-between">
               <Box>
-                <Text size="xs" fw={700} c="dimmed">
+                <Text size="xs" fw={700} c={colorScheme === 'dark' ? 'gray.4' : 'gray.8'}>
                   MIN SALARY
                 </Text>
-                <Title order={3} fw={900}>
+                <Title order={3} fw={900} c={colorScheme === 'dark' ? 'white' : 'black'}>
                   ₱{(data.salary_stats.min || 0).toLocaleString()}
                 </Title>
               </Box>
-              <ThemeIcon color="blue" variant="light" size="lg">
-                <IconCurrencyDollar size={20} />
+              <ThemeIcon color="blue" variant="filled" size="lg" aria-hidden="true">
+                <IconCurrencyDollar size={20} aria-hidden="true" />
               </ThemeIcon>
             </Group>
           </Paper>
           <Paper p="md" radius="md" withBorder shadow="xs">
             <Group justify="space-between">
               <Box>
-                <Text size="xs" fw={700} c="dimmed">
+                <Text size="xs" fw={700} c={colorScheme === 'dark' ? 'gray.4' : 'gray.8'}>
                   MAX SALARY
                 </Text>
-                <Title order={3} fw={900}>
+                <Title order={3} fw={900} c={colorScheme === 'dark' ? 'white' : 'black'}>
                   ₱{(data.salary_stats.max || 0).toLocaleString()}
                 </Title>
               </Box>
-              <ThemeIcon color="orange" variant="light" size="lg">
-                <IconCurrencyDollar size={20} />
+              <ThemeIcon color="orange" variant="filled" size="lg" aria-hidden="true">
+                <IconCurrencyDollar size={20} aria-hidden="true" />
               </ThemeIcon>
             </Group>
           </Paper>
           <Paper p="md" radius="md" withBorder shadow="xs">
             <Group justify="space-between">
               <Box>
-                <Text size="xs" fw={700} c="dimmed">
+                <Text size="xs" fw={700} c={colorScheme === 'dark' ? 'gray.4' : 'gray.8'}>
                   TOTAL PAYROLL
                 </Text>
-                <Title order={3} fw={900}>
+                <Title order={3} fw={900} c={colorScheme === 'dark' ? 'white' : 'black'}>
                   ₱{((data.salary_stats.total || 0) / 1000000).toFixed(1)}M
                 </Title>
               </Box>
-              <ThemeIcon color="grape" variant="light" size="lg">
-                <IconCurrencyDollar size={20} />
+              <ThemeIcon color="grape" variant="filled" size="lg" aria-hidden="true">
+                <IconCurrencyDollar size={20} aria-hidden="true" />
               </ThemeIcon>
             </Group>
           </Paper>
@@ -165,10 +167,10 @@ export default function ReportsPage() {
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
           <Paper p="xl" radius="md" withBorder shadow="sm">
             <Group mb="xl" gap="xs">
-              <IconChartLine color="var(--mantine-color-blue-6)" />
-              <Title order={4}>Expiry Trend (Next 12 Months)</Title>
+              <IconChartLine color="var(--mantine-color-blue-6)" aria-hidden="true" />
+              <Title order={2} size="h4">Expiry Trend (Next 12 Months)</Title>
             </Group>
-            <Box h={300}>
+            <Box h={300} role="img" aria-label="Line chart showing contract expiry trends for the next 12 months">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data.expirations_by_month || []}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -177,8 +179,9 @@ export default function ReportsPage() {
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
+                    tick={{ fill: colorScheme === 'dark' ? '#adb5bd' : '#495057', fontWeight: 500 }}
                   />
-                  <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis fontSize={12} tickLine={false} axisLine={false} tick={{ fill: colorScheme === 'dark' ? '#adb5bd' : '#495057', fontWeight: 500 }} />
                   <Tooltip
                     contentStyle={{
                       borderRadius: "8px",
@@ -201,10 +204,10 @@ export default function ReportsPage() {
 
           <Paper p="xl" radius="md" withBorder shadow="sm">
             <Group mb="xl" gap="xs">
-              <IconChartPie color="var(--mantine-color-teal-6)" />
-              <Title order={4}>Contract Type Distribution</Title>
+              <IconChartPie color="var(--mantine-color-teal-6)" aria-hidden="true" />
+              <Title order={2} size="h4">Contract Type Distribution</Title>
             </Group>
-            <Box h={300}>
+            <Box h={300} role="img" aria-label="Donut chart showing contract type distribution">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -235,10 +238,10 @@ export default function ReportsPage() {
 
           <Paper p="xl" radius="md" withBorder shadow="sm">
             <Group mb="xl" gap="xs">
-              <IconUsers color="var(--mantine-color-orange-6)" />
-              <Title order={4}>Manager Workload (Top 10)</Title>
+              <IconUsers color="var(--mantine-color-orange-6)" aria-hidden="true" />
+              <Title order={2} size="h4">Manager Workload (Top 10)</Title>
             </Group>
-            <Box h={300}>
+            <Box h={300} role="img" aria-label="Horizontal bar chart showing manager workload distribution">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.manager_workload || []} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -250,6 +253,7 @@ export default function ReportsPage() {
                     width={100}
                     tickLine={false}
                     axisLine={false}
+                    tick={{ fill: colorScheme === 'dark' ? '#adb5bd' : '#495057', fontWeight: 500 }}
                   />
                   <Tooltip cursor={{ fill: "transparent" }} />
                   <Bar
@@ -265,10 +269,10 @@ export default function ReportsPage() {
 
           <Paper p="xl" radius="md" withBorder shadow="sm">
             <Group mb="xl" gap="xs">
-              <IconChartBar color="var(--mantine-color-red-6)" />
-              <Title order={4}>Current Status Summary</Title>
+              <IconChartBar color="var(--mantine-color-red-6)" aria-hidden="true" />
+              <Title order={2} size="h4">Current Status Summary</Title>
             </Group>
-            <Box h={300}>
+            <Box h={300} role="img" aria-label="Pie chart showing summary of current contract statuses">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie

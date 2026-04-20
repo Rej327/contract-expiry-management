@@ -12,8 +12,9 @@ import {
   Paper,
   Avatar,
   Badge,
-  ActionIcon,
   Stack,
+  useMantineColorScheme,
+  ActionIcon,
 } from "@mantine/core";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import {
@@ -28,7 +29,7 @@ import {
 import dayjs from "dayjs";
 
 const PAGE_SIZE = 10;
-import { getAllContractsForExport } from '@/app/actions/get';
+import { getAllContractsForExport } from "@/app/actions/get";
 import {
   Contract,
   ContractStatus,
@@ -83,6 +84,7 @@ export function ContractTable({
   onSortStatusChange,
   loading,
 }: ContractTableProps) {
+  const { colorScheme } = useMantineColorScheme();
   const router = useRouter();
   const [selectedRecords, setSelectedRecords] = useState<ContractRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,7 +103,14 @@ export function ContractTable({
       TERMINATED: "dark",
     };
     return (
-      <Badge variant="light" color={colors[status]} size="sm" fw={700}>
+      <Badge
+        variant="filled"
+        color={
+          colorScheme === "dark" ? `${colors[status]}.6` : `${colors[status]}.9`
+        }
+        size="sm"
+        fw={700}
+      >
         {status}
       </Badge>
     );
@@ -110,47 +119,57 @@ export function ContractTable({
   const handleExportCSV = async () => {
     setExportLoading(true);
     try {
-        const recordsToExport = selectedRecords.length > 0 
-            ? selectedRecords 
-            : await getAllContractsForExport();
-        
-        // Define headers
-        const headers = [
-            'Employee Name', 'Role', 'Email', 'Manager', 
-            'Expiry Date', 'Status', 'Salary', 'Type'
-        ];
-        
-        // Map data to rows
-        const rows = recordsToExport.map(r => [
-            `"${r.employee_first_name} ${r.employee_last_name}"`,
-            `"${r.employee_role}"`,
-            `"${r.employee_email}"`,
-            `"${r.manager_first_name} ${r.manager_last_name}"`,
-            r.contract_expiry_date,
-            r.contract_status,
-            r.contract_salary,
-            r.contract_type
-        ]);
-        
-        // Combine into CSV string
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.join(','))
-        ].join('\n');
-        
-        // Create download link
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `contracts_export_${dayjs().format('YYYY-MM-DD')}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      const recordsToExport =
+        selectedRecords.length > 0
+          ? selectedRecords
+          : await getAllContractsForExport();
+
+      // Define headers
+      const headers = [
+        "Employee Name",
+        "Role",
+        "Email",
+        "Manager",
+        "Expiry Date",
+        "Status",
+        "Salary",
+        "Type",
+      ];
+
+      // Map data to rows
+      const rows = recordsToExport.map((r) => [
+        `"${r.employee_first_name} ${r.employee_last_name}"`,
+        `"${r.employee_role}"`,
+        `"${r.employee_email}"`,
+        `"${r.manager_first_name} ${r.manager_last_name}"`,
+        r.contract_expiry_date,
+        r.contract_status,
+        r.contract_salary,
+        r.contract_type,
+      ]);
+
+      // Combine into CSV string
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.join(",")),
+      ].join("\n");
+
+      // Create download link
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `contracts_export_${dayjs().format("YYYY-MM-DD")}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-        console.error('Export failed:', error);
+      console.error("Export failed:", error);
     } finally {
-        setExportLoading(false);
+      setExportLoading(false);
     }
   };
 
@@ -158,20 +177,27 @@ export function ContractTable({
     <Paper radius="md" withBorder shadow="sm">
       <Box
         p="md"
-        style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
+        style={{
+          borderBottom: "1px solid var(--mantine-color-default-border)",
+        }}
       >
         <Group justify="space-between">
           <Group gap="xl">
             <Group gap={8}>
-              <Text size="sm" fw={600} c="dimmed">
+              <Text
+                size="sm"
+                fw={600}
+                c={colorScheme === "dark" ? "gray.4" : "gray.8"}
+              >
                 Selected ({selectedRecords.length})
               </Text>
             </Group>
             <Button
               size="sm"
-              leftSection={<IconMail size={16} />}
+              leftSection={<IconMail size={16} aria-hidden="true" />}
               disabled={selectedRecords.length === 0}
               radius="md"
+              color={colorScheme === "dark" ? "blue.6" : "blue.9"}
               onClick={() => onNotify(selectedRecords)}
             >
               Notify
@@ -191,9 +217,15 @@ export function ContractTable({
 
           <TextInput
             placeholder="Search employee or manager..."
+            aria-label="Search employee or manager"
             leftSection={<IconSearch size={16} />}
             rightSection={
-              <ActionIcon variant="subtle" color="gray" onClick={handleSearch}>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={handleSearch}
+                aria-label="Perform search"
+              >
                 <IconChevronRight size={16} />
               </ActionIcon>
             }
@@ -234,6 +266,7 @@ export function ContractTable({
                   src={record.employee_avatar_url}
                   radius="xl"
                   color="blue"
+                  aria-hidden="true"
                 >
                   {record.employee_first_name[0]}
                   {record.employee_last_name[0]}
@@ -246,7 +279,10 @@ export function ContractTable({
                   >
                     {record.employee_first_name} {record.employee_last_name}
                   </Text>
-                  <Text size="xs" c="dimmed">
+                  <Text
+                    size="xs"
+                    c={colorScheme === "dark" ? "gray.4" : "gray.8"}
+                  >
                     {record.employee_role}
                   </Text>
                 </div>
@@ -277,10 +313,16 @@ export function ContractTable({
                   fw={700}
                   c={
                     record.remaining_days < 30
-                      ? "red"
+                      ? colorScheme === "dark"
+                        ? "red.5"
+                        : "red.9"
                       : record.remaining_days < 60
-                        ? "orange"
-                        : "green"
+                        ? colorScheme === "dark"
+                          ? "orange.6"
+                          : "orange.9"
+                        : colorScheme === "dark"
+                          ? "green.6"
+                          : "green.9"
                   }
                 >
                   {record.remaining_days} DAYS LEFT
@@ -304,26 +346,26 @@ export function ContractTable({
                   variant="subtle"
                   color="blue"
                   radius="xl"
-                  title="Edit"
+                  aria-label={`Edit contract for ${record.employee_first_name} ${record.employee_last_name}`}
                   onClick={() => onEdit(record)}
                 >
-                  <IconEdit size={18} />
+                  <IconEdit size={18} aria-hidden="true" />
                 </ActionIcon>
                 <ActionIcon
                   variant="subtle"
                   color="red"
                   radius="xl"
-                  title="Delete"
+                  aria-label={`Delete contract for ${record.employee_first_name} ${record.employee_last_name}`}
                   onClick={() => onDelete(record)}
                 >
-                  <IconTrash size={18} />
+                  <IconTrash size={18} aria-hidden="true" />
                 </ActionIcon>
                 <Button
                   size="xs"
                   variant="filled"
-                  color="blue"
+                  color={colorScheme === "dark" ? "blue.6" : "blue.9"}
                   radius="md"
-                  leftSection={<IconRepeat size={14} />}
+                  leftSection={<IconRepeat size={14} aria-hidden="true" />}
                   onClick={() => onRenew(record)}
                 >
                   Renew
@@ -347,7 +389,10 @@ export function ContractTable({
             borderBottom: "1px solid var(--mantine-color-default-border)",
             fontSize: "10px",
             fontWeight: 800,
-            color: "var(--mantine-color-dimmed)",
+            color:
+              colorScheme === "dark"
+                ? "var(--mantine-color-gray-4)"
+                : "var(--mantine-color-gray-8)",
             letterSpacing: "1px",
           },
         }}

@@ -18,8 +18,9 @@ import {
   Breadcrumbs,
   Anchor,
   Popover,
-  Select,
   Divider,
+  useMantineColorScheme,
+  Select,
 } from "@mantine/core";
 import {
   IconHistory,
@@ -43,6 +44,7 @@ import {
 } from "@/app/actions/get";
 
 export default function RenewalLogsPage() {
+  const { colorScheme } = useMantineColorScheme();
   const [data, setData] = useState<RenewalLogRecord[]>([]);
   const [stats, setStats] = useState({
     total_this_month: 0,
@@ -166,10 +168,14 @@ export default function RenewalLogsPage() {
         <Stack gap={0}>
           <Group justify="space-between" align="center">
             <Box>
-              <Title order={2} fw={800} style={{ letterSpacing: -1.5 }}>
+              <Title order={1} fw={800} style={{ letterSpacing: -1.5 }}>
                 Renewal Logs
               </Title>
-              <Text c="dimmed" size="sm" mt={4}>
+              <Text
+                c={colorScheme === "dark" ? "gray.4" : "gray.8"}
+                size="sm"
+                mt={4}
+              >
                 Track and review past contract renewals across the organization.
               </Text>
             </Box>
@@ -189,26 +195,43 @@ export default function RenewalLogsPage() {
                 <Text
                   size="xs"
                   fw={700}
-                  c="dimmed"
+                  c={colorScheme === "dark" ? "gray.4" : "gray.8"}
                   style={{ letterSpacing: 0.5 }}
                 >
                   TOTAL RENEWALS (THIS MONTH)
                 </Text>
-                <Title order={1} fw={900} mt={4} style={{ fontSize: "2.2rem" }}>
+                <Title
+                  order={1}
+                  fw={900}
+                  mt={4}
+                  style={{ fontSize: "2.2rem" }}
+                  c={colorScheme === "dark" ? "white" : "black"}
+                >
                   {stats.total_this_month}
                 </Title>
                 <Group gap={4} mt="xs">
                   <IconTrendingUp
                     size={16}
-                    color="var(--mantine-color-blue-6)"
+                    aria-hidden="true"
+                    color={`var(--mantine-color-blue-${colorScheme === "dark" ? "4" : "9"})`}
                   />
-                  <Text size="xs" fw={700} c="blue.6">
+                  <Text
+                    size="xs"
+                    fw={700}
+                    c={colorScheme === "dark" ? "blue.4" : "blue.9"}
+                  >
                     12.5% increase
                   </Text>
                 </Group>
               </Box>
-              <ThemeIcon variant="light" size={48} radius="md" color="blue">
-                <IconHistory size={24} />
+              <ThemeIcon
+                variant="filled"
+                size={48}
+                radius="md"
+                color={colorScheme === "dark" ? "blue.7" : "blue.9"}
+                aria-hidden="true"
+              >
+                <IconHistory size={24} aria-hidden="true" />
               </ThemeIcon>
             </Group>
           </Paper>
@@ -225,25 +248,46 @@ export default function RenewalLogsPage() {
                 <Text
                   size="xs"
                   fw={700}
-                  c="dimmed"
+                  c={colorScheme === "dark" ? "gray.4" : "gray.8"}
                   style={{ letterSpacing: 0.5 }}
                 >
                   AVG. EXTENSION PERIOD
                 </Text>
-                <Title order={1} fw={900} mt={4} style={{ fontSize: "2.2rem" }}>
+                <Title
+                  order={1}
+                  fw={900}
+                  mt={4}
+                  style={{ fontSize: "2.2rem" }}
+                  c={colorScheme === "dark" ? "white" : "black"}
+                >
                   {stats.avg_extension_months}{" "}
-                  <Text span size="xl" fw={800}>
+                  <Text
+                    span
+                    size="xl"
+                    fw={800}
+                    c={colorScheme === "dark" ? "gray.3" : "gray.7"}
+                  >
                     Mo
                   </Text>
                 </Title>
                 <Group gap={4} mt="xs">
-                  <Text size="xs" fw={700} c="dimmed">
+                  <Text
+                    size="xs"
+                    fw={700}
+                    c={colorScheme === "dark" ? "gray.4" : "gray.8"}
+                  >
                     — Stable vs last qtr
                   </Text>
                 </Group>
               </Box>
-              <ThemeIcon variant="light" size={48} radius="md" color="orange">
-                <IconCalendarTime size={24} />
+              <ThemeIcon
+                variant="filled"
+                size={48}
+                radius="md"
+                color={colorScheme === "dark" ? "orange.7" : "orange.8"}
+                aria-hidden="true"
+              >
+                <IconCalendarTime size={24} aria-hidden="true" />
               </ThemeIcon>
             </Group>
           </Paper>
@@ -260,23 +304,43 @@ export default function RenewalLogsPage() {
                 <Text
                   size="xs"
                   fw={700}
-                  c="dimmed"
+                  c={colorScheme === "dark" ? "gray.4" : "gray.8"}
                   style={{ letterSpacing: 0.5 }}
                 >
                   SUCCESS RATE
                 </Text>
-                <Title order={1} fw={900} mt={4} style={{ fontSize: "2.2rem" }}>
+                <Title
+                  order={1}
+                  fw={900}
+                  mt={4}
+                  style={{ fontSize: "2.2rem" }}
+                  c={colorScheme === "dark" ? "white" : "black"}
+                >
                   {stats.success_rate}%
                 </Title>
                 <Group gap={4} mt="xs">
-                  <IconCheck size={16} color="var(--mantine-color-teal-6)" />
-                  <Text size="xs" fw={700} c="teal.6">
+                  <IconCheck
+                    size={16}
+                    color={`var(--mantine-color-teal-${colorScheme === "dark" ? "4" : "9"})`}
+                    aria-hidden="true"
+                  />
+                  <Text
+                    size="xs"
+                    fw={700}
+                    c={colorScheme === "dark" ? "teal.4" : "teal.9"}
+                  >
                     Optimal performance
                   </Text>
                 </Group>
               </Box>
-              <ThemeIcon variant="light" size={48} radius="md" color="teal">
-                <IconChartBar size={24} />
+              <ThemeIcon
+                variant="filled"
+                size={48}
+                radius="md"
+                color={colorScheme === "dark" ? "teal.7" : "teal.8"}
+                aria-hidden="true"
+              >
+                <IconChartBar size={24} aria-hidden="true" />
               </ThemeIcon>
             </Group>
           </Paper>
@@ -296,16 +360,20 @@ export default function RenewalLogsPage() {
           >
             <Group justify="space-between">
               <Box>
-                <Title order={4} fw={800}>
+                <Title order={2} size="h4" fw={800}>
                   Recent Renewal Activity
                 </Title>
-                <Text size="xs" c="dimmed">
+                <Text
+                  size="xs"
+                  c={colorScheme === "dark" ? "gray.4" : "gray.8"}
+                >
                   Showing the last {data.length} system-wide renewals
                 </Text>
               </Box>
               <Group>
                 <TextInput
                   placeholder="Search employees or managers..."
+                  aria-label="Search employees or managers"
                   size="sm"
                   radius="md"
                   w={280}
@@ -315,6 +383,7 @@ export default function RenewalLogsPage() {
                       variant="subtle"
                       color="gray"
                       onClick={handleSearch}
+                      aria-label="Perform search"
                     >
                       <IconChevronRight size={16} />
                     </ActionIcon>
@@ -331,14 +400,14 @@ export default function RenewalLogsPage() {
                 >
                   <Popover.Target>
                     <Button
-                      variant="light"
+                      variant="filled"
                       color={
                         statusFilter || typeFilter || isAutoFilter !== "ALL"
-                          ? "blue"
-                          : "gray"
+                          ? "blue.9"
+                          : "blue.9"
                       }
                       radius="md"
-                      leftSection={<IconFilter size={16} />}
+                      leftSection={<IconFilter size={16} aria-hidden="true" />}
                     >
                       Filter
                     </Button>
@@ -346,7 +415,7 @@ export default function RenewalLogsPage() {
                   <Popover.Dropdown p="md">
                     <Stack gap="md">
                       <Group justify="space-between">
-                        <Text size="xs" fw={700} c="dimmed">
+                        <Text size="xs" fw={700} c="gray.7">
                           FILTER LOGS
                         </Text>
                         <Button
@@ -431,7 +500,8 @@ export default function RenewalLogsPage() {
                 </Popover>
                 <Button
                   radius="md"
-                  leftSection={<IconDownload size={16} />}
+                  color={colorScheme === "dark" ? "blue.6" : "blue.9"}
+                  leftSection={<IconDownload size={16} aria-hidden="true" />}
                   onClick={handleExportCSV}
                   loading={exportLoading}
                 >
@@ -464,6 +534,11 @@ export default function RenewalLogsPage() {
                       src={record.employee_avatar_url}
                       radius="xl"
                       color="blue"
+                      alt={
+                        record.employee_first_name +
+                        " " +
+                        record.employee_last_name
+                      }
                     >
                       {record.employee_first_name[0]}
                       {record.employee_last_name[0]}
@@ -472,7 +547,10 @@ export default function RenewalLogsPage() {
                       <Text size="sm" fw={700}>
                         {record.employee_first_name} {record.employee_last_name}
                       </Text>
-                      <Text size="xs" c="dimmed">
+                      <Text
+                        size="xs"
+                        c={colorScheme === "dark" ? "gray.4" : "gray.8"}
+                      >
                         {record.employee_role}
                       </Text>
                     </Box>
@@ -524,10 +602,16 @@ export default function RenewalLogsPage() {
                         fw={700}
                         c={
                           daysLeft < 30
-                            ? "red"
+                            ? colorScheme === "dark"
+                              ? "red.6"
+                              : "red.9"
                             : daysLeft < 60
-                              ? "orange"
-                              : "green"
+                              ? colorScheme === "dark"
+                                ? "orange.6"
+                                : "orange.9"
+                              : colorScheme === "dark"
+                                ? "green.6"
+                                : "green.9"
                         }
                       >
                         {daysLeft} DAYS LEFT
@@ -546,7 +630,7 @@ export default function RenewalLogsPage() {
                         ? "System (Auto)"
                         : `${record.manager_first_name} ${record.manager_last_name}`}
                     </Text>
-                    <Text size="xs" c="dimmed">
+                    <Text size="xs">
                       {dayjs(record.renewal_created_at).format("MMM DD, HH:mm")}
                     </Text>
                   </Box>
@@ -566,8 +650,12 @@ export default function RenewalLogsPage() {
                   };
                   return (
                     <Badge
-                      variant="light"
-                      color={colors[status] || "gray"}
+                      variant="filled"
+                      color={
+                        colorScheme === "dark"
+                          ? `${colors[status]}.6`
+                          : `${colors[status]}.9`
+                      }
                       size="sm"
                       fw={700}
                     >
@@ -583,7 +671,10 @@ export default function RenewalLogsPage() {
                 borderBottom: "1px solid var(--mantine-color-default-border)",
                 fontSize: "10px",
                 fontWeight: 800,
-                color: "var(--mantine-color-dimmed)",
+                color:
+                  colorScheme === "dark"
+                    ? "var(--mantine-color-gray-4)"
+                    : "var(--mantine-color-gray-8)",
                 letterSpacing: "1px",
               },
             }}
